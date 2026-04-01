@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
+
+# Node
+node_modules/
+
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+android/app/release
+
+# IntelliJ/VS Code
+.idea/
+.vscode/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Keys / secrets
+privkey/
+
+# App data caches
+backend/app/data/*.bsp*
+backend/app/data/*.download*
+backend/de421*.*
+
+# Flutter generated icon/splash
+**/Generated.xcconfig
+**/flutter_export_environment.sh
+**/Flutter/ephemeral/

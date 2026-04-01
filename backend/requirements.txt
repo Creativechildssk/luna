@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+skyfield
+numpy
+pydantic
+python-dotenv
+timezonefinder

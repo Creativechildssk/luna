@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: luna-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - luna-data:/app/app/data
+    environment:
+      # Uncomment to control workers, default uvicorn single worker
+      # - UVICORN_WORKERS=2
+    restart: unless-stopped
+
+volumes:
+  luna-data:
