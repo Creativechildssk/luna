@@ -1,78 +1,65 @@
 # LUNA Backend – Developer Handoff (v1.0.0)
 
-FastAPI service for Moon/planet/satellite visibility windows, rise/set countdowns, and ground tracks.
+FastAPI service for Moon / planet / satellite visibility windows, rise/set countdowns, ground tracks, and illumination.
 Stack: Python 3.12, FastAPI, Skyfield.
 
 ## Run locally
-`ash
+```bash
 cd backend
 python -m venv .venv && .venv/Scripts/activate  # or source .venv/bin/activate
-pip install -r requirements.txt                 # first call downloads ephemeris if missing
+pip install -r requirements.txt                 # first run downloads ephemeris if missing
 uvicorn app.main:app --reload                   # http://127.0.0.1:8000/docs
-`
+```
 
-## Run with Docker
-`ash
-cd backend
-docker compose up --build        # uses backend/docker-compose.yml
-`
-Persistent ephemeris/TLE cache is mounted at volume luna-data → /app/app/data.
+_Docker files were removed; run locally or add your own containerization later._
 
 ## API surface
-- /health – liveness.
-- /moon/position – current az/alt/direction.
-- /moon/visibility – position + visibility state + illumination hints.
-- /moon/next-rise / /moon/next-set.
-- /moon/window – **preferred** unified moon response (see fields below).
+- `/health` – liveness
+- Moon: `/moon/position`, `/moon/visibility`, `/moon/next-rise`, `/moon/next-set`, `/moon/window` (recommended)
+- Planet: `/planet/position`, `/planet/window`
+- Satellite: `/satellite/position`, `/satellite/window`, `/satellite/track`
 
-- /planet/position – current position for a planet.
-- /planet/window – rise/set window for a planet.
+All endpoints return UTC (`*_utc`, suffixed `Z`) and server-local (`*_local`) timestamps.
 
-- /satellite/position – current position from TLE.
-- /satellite/window – next visible pass window.
-- /satellite/track – ground track polyline for next N hours (capped to 6h).
+### Window / visibility fields (moon & planets; satellites mirror)
+- `visible_now` (bool)
+- `next_*rise_utc/local`, `next_*set_utc/local`
+- `minutes_until_rise`, `minutes_until_set`, `minutes_until_best`
+- Human strings: `rises_in`, `sets_in`
+- Durations: `visible_duration_minutes`, `next_visible_duration_minutes`
+- Peak: `max_altitude_deg`, `time_of_max_altitude_utc/local` (best observation time = peak altitude)
+- Illumination: `illumination_percent`, `phase_hint`
+- Night check: `is_night` (sun altitude < -6°)
+- Distance: `position.distance_km`
+- State: `visibility_state` ∈ {`visible`, `rising_soon`, `setting_soon`, `below_horizon`}
+- Status text: `status_message`
+- Position: `{ azimuth, altitude, direction, direction_label, elevation_state, distance_km }`
+- Extras: `minutes_since_rise` (when visible), `days_until_next_rise`
 
-All endpoints emit both UTC (*_utc, always suffixed Z) and server-local time (*_local).
+Edge cases: if no rise/set in the search window, the corresponding fields are `null` and duration is `0`.
 
-### Window/visibility fields (moon/planet/satellite)
-- isible_now (bool)
-- 
-ext_*rise_utc/local, 
-ext_*set_utc/local
-- minutes_until_rise, minutes_until_set, minutes_until_best
-- Human strings: 
-ises_in, sets_in
-- isible_duration_minutes, est_observation_time_utc/local
-- isibility_state ∈ {isible, 
-ising_soon, setting_soon, elow_horizon}
-- is_night – sun altitude < -6° at best time
-- status_message – short, user-ready line
-- phase_hint – simple moon/planet phase label
-- position – { azimuth, altitude, direction (16-point), direction_label, elevation_state }
-
-## Data dependencies (app/data)
-- **Moon**: Skyfield loads de421.bsp (~10 MB). Auto-download via Loader; retry logic added for Windows rename locks.
-- **Planets**: de440s.bsp (~115 MB). Auto-download from JPL on first use; place manually if offline (pp/data/de440s.bsp).
-- **Satellites**: satellites.tle (Two-Line Elements). Lookups by satellite name or NORAD ID present in this file. Update by appending new TLEs.
+## Data dependencies (`app/data`)
+- Moon: `de421.bsp` (~10 MB) auto-download with retry for Windows rename locks.
+- Planets: `de440s.bsp` (~115 MB) auto-download; place manually if offline.
+- Satellites: `satellites.tle` (Two-Line Elements); lookups by name or NORAD ID present in the file.
 
 ## Key behaviors
-- Time normalization: UTC strings always end with Z; local strings use server timezone.
-- Night check: civil-twilight threshold (-6°).
-- Direction: 16-point compass via pp/utils/direction.py.
-- Ephemeris/TLE cache is in pp/data; keep it on a volume in Docker to avoid re-download.
+- UTC strings always end with `Z`; local strings use server timezone.
+- Direction: 16-point compass via `app/utils/direction.py`.
+- Caches live in `app/data`; delete to force re-download.
 
 ## Code map
-- pp/main.py – FastAPI app + routers.
-- pp/api/ – route definitions (moon, planet, satellite, health).
-- pp/services/ – astro logic (moon_service, planet_service, satellite_service, astro_utils).
-- pp/utils/ – time, direction helpers.
-- pp/data/ – ephemeris and TLE files (created at runtime if missing).
+- `app/main.py` – FastAPI app + routers
+- `app/api/` – route definitions (moon, planet, satellite, health)
+- `app/services/` – astro logic (moon_service, planet_service, satellite_service, astro_utils)
+- `app/utils/` – time/direction helpers
+- `app/data/` – ephemeris and TLE files (created/downloaded at runtime)
 
 ## Common tasks
-- **Add a satellite**: append its TLE to pp/data/satellites.tle; call endpoints with its name or NORAD ID.
-- **Reset caches**: delete files under pp/data (or the Docker volume); first request will re-download ephemerides.
-- **Changing worker count**: set env UVICORN_WORKERS in docker-compose or your process manager.
+- Add a satellite: append TLE to `app/data/satellites.tle`; call with its name or NORAD ID.
+- Reset caches: remove files under `app/data`; first request re-downloads ephemerides/TLEs.
+- Change workers: run uvicorn via your own process manager with `--workers N` (no bundled compose now).
 
 ## Known considerations
-- Windows can lock ephemeris during rename; loaders already retry. If it persists, delete pp/data/de421.bsp* and retry.
-- The root docker-compose.yml at repo top still references a web service that was removed; use ackend/docker-compose.yml or delete the web service entry before running from repo root.
+- Windows file-locks during ephemeris rename can occur; delete `app/data/de421.bsp*` and retry if stuck.
+- When no rise occurs in the search window (e.g., polar regions), rise/set fields are `null` and `visibility_state` stays `below_horizon`.
