@@ -65,9 +65,22 @@ def load_tle(force: bool = False):
         return _tle_cache
 
     if not TLE_FILE.exists():
-        raise FileNotFoundError(
-            f"TLE file not found at {TLE_FILE}. Place a two-line TLE file named satellites.tle there."
+        # fallback to built-in ISS if file missing
+        from skyfield.api import EarthSatellite
+        iss_tle = (
+            "ISS (ZARYA)",
+            "1 25544U 98067A   24157.55059028  .00008361  00000+0  15486-3 0  9994",
+            "2 25544  51.6413  31.8664 0005517 115.1439 351.7793 15.50337559448135",
         )
+        sat = EarthSatellite(iss_tle[1], iss_tle[2], iss_tle[0], ts)
+        cache = {
+            sat.name.upper().strip(): sat,
+            str(sat.model.satnum): sat,
+        }
+        _tle_cache = cache
+        _tle_mtime = mtime
+        return _tle_cache
+
     sats = loader.tle_file(str(TLE_FILE))
     cache = {sat.name.upper().strip(): sat for sat in sats}
     for sat in sats:
