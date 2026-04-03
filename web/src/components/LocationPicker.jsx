@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export default function LocationPicker({ onChange }) {
   const [lat, setLat] = useState('');
@@ -6,8 +6,12 @@ export default function LocationPicker({ onChange }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
 
+  const isSecure =
+    typeof window !== 'undefined' &&
+    (window.isSecureContext || window.location.hostname === 'localhost');
+
   useEffect(() => {
-    if (!navigator.geolocation) return;
+    if (!isSecure || !navigator.geolocation) return;
     setBusy(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -18,10 +22,21 @@ export default function LocationPicker({ onChange }) {
         setBusy(false);
         setMsg('Auto-detected from browser');
       },
-      () => setBusy(false),
+      (err) => {
+        setBusy(false);
+        setMsg(err.message);
+      },
       { enableHighAccuracy: true, timeout: 4000 }
     );
-  }, [onChange]);
+  }, [onChange, isSecure]);
+
+  useEffect(() => {
+    if (!isSecure) {
+      setMsg('Browser blocks geolocation on insecure HTTP. Use https or enter lat/lon manually.');
+    }
+  }, [isSecure]);
+
+  const canUseGeo = useMemo(() => isSecure && typeof navigator !== 'undefined' && !!navigator.geolocation, [isSecure]);
 
   return (
     <div className="card p-4 space-y-3">
@@ -50,7 +65,11 @@ export default function LocationPicker({ onChange }) {
       <div className="flex gap-2 flex-wrap">
         <button
           className="px-4 py-2 rounded-lg bg-accent text-slate-900 font-semibold"
-          onClick={() => onChange(parseFloat(lat), parseFloat(lon))}
+          onClick={() => {
+            const la = parseFloat(lat);
+            const lo = parseFloat(lon);
+            if (Number.isFinite(la) && Number.isFinite(lo)) onChange(la, lo);
+          }}
           disabled={!lat || !lon}
         >
           Use location
@@ -58,8 +77,8 @@ export default function LocationPicker({ onChange }) {
         <button
           className="px-4 py-2 rounded-lg border border-border"
           onClick={() => {
-            if (!navigator.geolocation) {
-              setMsg('Geolocation not available.');
+            if (!canUseGeo) {
+              setMsg('Geolocation not available in this context.');
               return;
             }
             setBusy(true);
@@ -79,7 +98,7 @@ export default function LocationPicker({ onChange }) {
               { enableHighAccuracy: true, timeout: 5000 }
             );
           }}
-          disabled={busy}
+          disabled={busy || !canUseGeo}
         >
           {busy ? 'Locating...' : 'Locate me'}
         </button>
