@@ -113,28 +113,28 @@ def _is_night(lat: float, lon: float, time_iso: Optional[str] = None) -> bool:
 
 
 def _phase_hint() -> str:
-    """Basic phase description from current phase angle."""
-    angle = almanac.phase_angle(planets, "moon", ts.now()).degrees
-    # also used to derive illumination percent elsewhere
-    if angle < 45:
-        return "waxing crescent"
-    if angle < 90:
-        return "waxing crescent"
-    if angle == 90:
-        return "first quarter"
-    if angle < 135:
-        return "waxing gibbous"
-    if angle < 180:
-        return "waxing gibbous"
-    if angle == 180:
-        return "full moon"
-    if angle < 225:
-        return "waning gibbous"
-    if angle < 270:
-        return "waning gibbous"
-    if angle == 270:
-        return "last quarter"
-    return "waning crescent"
+    """Phase label using illumination trend (waxing/waning) + fraction."""
+    now = ts.now()
+    frac_now = float(almanac.fraction_illuminated(planets, "moon", now))
+    # Look a few hours ahead to detect waxing/waning
+    frac_future = float(almanac.fraction_illuminated(planets, "moon", now + (6 / 24)))
+    waxing = frac_future > frac_now
+    illum = frac_now
+    if illum < 0.01:
+        base = "new"
+    elif illum < 0.25:
+        base = "crescent"
+    elif illum < 0.35:
+        base = "first quarter" if waxing else "last quarter"
+    elif illum < 0.75:
+        base = "gibbous"
+    elif illum >= 0.95:
+        base = "full moon"
+    else:
+        base = "gibbous"
+    if base in ["new", "full moon", "first quarter", "last quarter"]:
+        return base
+    return ("waxing " if waxing else "waning ") + base
 
 
 def get_moon_position(lat: float, lon: float):
@@ -250,10 +250,10 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
     rise_iso = _to_utc_z(rise.get("next_moonrise_utc"))
     set_iso = _to_utc_z(rise.get("next_moonset_utc") or moon_set.get("next_moonset_utc"))
 
-    duration_minutes, best_mid_utc = _duration_and_midpoint(rise_iso, set_iso)
-    best_mid_utc = _strip_microseconds(_to_utc_z(best_mid_utc))
-    best_mid_local = _strip_microseconds(to_local_time(best_mid_utc)) if best_mid_utc else None
-    minutes_until_best = _minutes_until(best_mid_utc) if best_mid_utc else None
+    duration_minutes, _ = _duration_and_midpoint(rise_iso, set_iso)
+    best_mid_utc = None
+    best_mid_local = None
+    minutes_until_best = None
     minutes_until_set = moon_set.get("minutes_until_set")
 
     # short status
@@ -302,14 +302,14 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
     # illumination percent (current)
     illumination_percent = round(float(almanac.fraction_illuminated(planets, "moon", ts.now()) * 100.0), 1)
 
-    # max altitude within window (coarse sampling)
+    # max altitude within window (coarse sampling) and use it as best observation time
     max_altitude_deg = None
     time_of_max_altitude_utc = None
     if rise_iso and set_iso:
         start_dt = datetime.fromisoformat(rise_iso.replace("Z", "+00:00"))
         end_dt = datetime.fromisoformat(set_iso.replace("Z", "+00:00"))
         if end_dt > start_dt:
-            steps = 60
+            steps = 120  # finer sampling (~1 min for a 2h window, ~6 min for 12h)
             dts = [start_dt + (end_dt - start_dt) * (i / (steps - 1)) for i in range(steps)]
             t_array = ts.from_datetimes(dts)
             site = _topos(lat, lon)
@@ -317,6 +317,11 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
             idx = int(np.argmax(alts))
             max_altitude_deg = round(float(alts[idx]), 2)
             time_of_max_altitude_utc = dts[idx].replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+            best_mid_utc = time_of_max_altitude_utc  # align best time to peak altitude
+
+    best_mid_utc = _strip_microseconds(_to_utc_z(best_mid_utc)) if best_mid_utc else None
+    best_mid_local = _strip_microseconds(to_local_time(best_mid_utc)) if best_mid_utc else None
+    minutes_until_best = _minutes_until(best_mid_utc) if best_mid_utc else None
 
     days_until_next_rise = None
     if minutes_until_rise is not None:
