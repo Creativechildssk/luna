@@ -52,6 +52,12 @@ export default function App() {
     enabled: !!sat,
     staleTime: 60_000,
   });
+  const weather = useQuery({
+    queryKey: ['weather', lat, lon],
+    queryFn: () => api.weather(lat, lon),
+    enabled: !!lat && !!lon,
+    staleTime: 15 * 60_000,
+  });
 
   const activeData = view === 'moon' ? moon.data : view === 'planet' ? planetQ.data : satQ.data;
   const activeError = view === 'moon' ? moon.error : view === 'planet' ? planetQ.error : satQ.error;
@@ -87,7 +93,7 @@ export default function App() {
     }),
     [activeData]
   );
-  const quality = useMemo(() => computeQuality(activeData), [activeData]);
+  const quality = useMemo(() => computeQuality(activeData, weather.data), [activeData, weather.data]);
 
   const fmtTime = (ts) => {
     if (!ts) return '—';
@@ -174,7 +180,7 @@ export default function App() {
           <div className="text-xs text-muted">Night? {summary.is_night ? 'Yes' : 'No'}</div>
         </div>
 
-        <QualityCard score={quality.score} label={quality.label} details={quality.details} />
+        <QualityCard score={quality.score} label={quality.label} details={quality.details || weatherDetails(weather.data)} />
       </div>
 
       <CountdownGrid data={activeData} fmtTime={fmtTime} />
@@ -277,7 +283,7 @@ export default function App() {
   );
 }
 
-function computeQuality(data) {
+function computeQuality(data, weather) {
   if (!data) return { score: null, label: '', details: '' };
   let score = 0;
 
@@ -307,7 +313,35 @@ function computeQuality(data) {
     if (data.position.distance_km < 380000) score += 5;
   }
 
+  // weather: cloud cover penalty
+  const cloud = extractCurrentCloudCover(weather);
+  if (cloud != null) {
+    if (cloud < 20) score += 15;
+    else if (cloud < 50) score += 5;
+    else score -= 15;
+  }
+
   score = Math.max(0, Math.min(100, Math.round(score)));
   const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Poor';
   return { score, label, details: '' };
+}
+
+function extractCurrentCloudCover(weather) {
+  try {
+    if (weather?.current_weather && typeof weather.current_weather.cloudcover === 'number') {
+      return weather.current_weather.cloudcover;
+    }
+    // fallback to first hourly value
+    if (weather?.hourly?.cloudcover?.length) return weather.hourly.cloudcover[0];
+  } catch (e) {
+    return null;
+  }
+  return null;
+}
+
+function weatherDetails(weather) {
+  const cloud = extractCurrentCloudCover(weather);
+  if (cloud == null) return '';
+  const quality = cloud < 20 ? 'Clear sky' : cloud < 50 ? 'Partly cloudy' : 'Cloudy';
+  return `${quality} • Cloud cover ${cloud}%`;
 }

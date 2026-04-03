@@ -1,21 +1,21 @@
-const baseEnv = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const baseEnv = import.meta.env.VITE_API_BASE || "http://localhost:8000";
 
 function buildUrl(path) {
   // Allow both absolute bases (http...) and relative ("/api").
-  if (baseEnv.startsWith('http')) {
+  if (baseEnv.startsWith("http")) {
     return new URL(path, baseEnv);
   }
   // Relative base: resolve against current origin.
-  const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const base = origin + baseEnv.replace(/\/$/, '') + '/';
-  return new URL(path.replace(/^\//, ''), base);
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const base = origin + baseEnv.replace(/\/$/, "") + "/";
+  return new URL(path.replace(/^\//, ""), base);
 }
 
 async function fetchJson(path, params) {
   const url = buildUrl(path);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
-      if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+      if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
     });
   }
   const res = await fetch(url.toString());
@@ -33,9 +33,19 @@ export const api = {
   satelliteVisible: (lat, lon, hours = 12, limit = 10) =>
     fetchJson('/satellite/visible', { lat, lon, hours, limit }),
   alerts: () => fetchJson('/alerts'),
+  weather: async (lat, lon) => {
+    const url = new URL('https://api.open-meteo.com/v1/forecast');
+    url.searchParams.set('latitude', lat);
+    url.searchParams.set('longitude', lon);
+    url.searchParams.set('hourly', 'cloudcover');
+    url.searchParams.set('current_weather', 'true');
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
 };
 
-export function fmt(val, fallback = 'â€”') {
+export function fmt(val, fallback = "—") {
   if (val === null || val === undefined) return fallback;
   return val;
 }
