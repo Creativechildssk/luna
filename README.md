@@ -1,105 +1,68 @@
-# LUNA  
-Location-Based Lunar & Space Observation Engine
+﻿# LUNA
 
-## Overview
-LUNA is an open-source platform that helps anyone—especially students—observe the Moon and space missions from Earth with precision. It turns time + location + orbital data into simple, actionable guidance: “Look here, at this time.”
+Full-stack moon/planet/satellite visibility API with web UI.
 
-## Vision
-LUNA is the foundation for a student-powered global observation network and a stepping stone toward future systems from WFD DeepTech Labs, including satellite tracking and deep-space observation.
+## Project Structure
+- backend/ — FastAPI + Skyfield, Postgres alerts
+- web/ — Vite/React (TanStack Query, Leaflet)
+- infra/ — nginx reverse proxy
+- docker-compose.yml — backend+web+nginx+postgres stack
 
-## Features (current)
-- Real-time Moon position (altitude, azimuth)
-- Location-based observation (lat/long input)
-- Direction guidance (N, NE, E, etc.)
-- UTC-based timing
-- API-first architecture
-- Fully open-source
+## Run locally (no Docker)
+### Backend
+`ash
+cd backend
+python -m venv .venv
+. .venv/Scripts/activate  # or source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+`
+Env vars:
+- DATABASE_URL (optional; Postgres). If unset, SQLite fallback.
 
-## Planned features
-- Next moonrise / visibility prediction
-- Space mission tracking (e.g., Artemis flyby)
-- Flutter mobile app with alerts (“Look now!”)
-- Multi-user observation network
-- Camera integration (AR-style guidance)
-- Satellite tracking (ISS, CubeSats, future USAT)
+### Web
+`ash
+cd web
+npm install
+npm run dev -- --host --port 3000
+`
+Set VITE_API_BASE to http://localhost:8000 or /api when fronted by nginx.
 
-## Tech stack
-- **Backend:** Python, FastAPI, Skyfield, NumPy
-- **Frontend (planned):** Next.js
-- **Mobile (planned):** Flutter
+## Run with Docker
+`ash
+cd ~/luna
+docker compose up -d --build
+`
+Services: backend (8000 internal), web (3000 internal), nginx (80/443), postgres (5432).
+Certs: mount /etc/letsencrypt for TLS; nginx listens on 443 if certs exist.
 
-## Architecture (conceptual)
-User Location + UTC Time  
-        ↓  
-Sky Engine (Moon position via Skyfield)  
-        ↓  
-Mission Engine (events & trajectories)  
-        ↓  
-Projection Layer  
-        ↓  
-Output → “Where & When to Look”
+## Production endpoint
+- Web: https://luna.wfddeeptechlabs.com
+- API proxied at /api/*
 
-## Project structure
-```
-luna/
-├── backend/   # FastAPI core engine
-├── mobile/    # Flutter app
-├── web/       # Next.js dashboard
-├── data/      # Mission data
-├── docs/      # Documentation
-└── examples/  # Student-friendly scripts
-```
+## Features
+- Moon/planet/satellite visibility window (rise/set/best, duration, direction, distance)
+- Visibility state, is_night, quality score (cloud cover via Open-Meteo)
+- Satellite list/track (CelesTrak TLE), alerts API (Postgres)
+- Live countdowns, responsive layout, AR Quick View (camera + heading)
+- Error banners, skeleton loaders, compass visual, timeline progress
 
-## Getting started
-1) Clone the repo  
-   `git clone https://github.com/your-username/luna.git`  
-   `cd luna/backend`
-2) Install dependencies  
-   `pip install -r requirements.txt`
-3) Run the server  
-   `uvicorn app.main:app`
-4) Open API docs  
-   http://127.0.0.1:8000/docs
+## AR Quick View
+- Access via “📷 AR view” on Visibility card
+- Uses device camera + orientation to guide to target az/alt (web, no install)
 
-## Example API usage
-**GET** `/moon/position?lat=11.5&lon=76.1`
+## Known limitations
+- Geolocation blocked on plain HTTP; use HTTPS or enter lat/lon manually
+- AR is lightweight (no plane detection); guidance uses compass accuracy
 
-Response:
-```json
-{
-  "timestamp_utc": "2026-03-29T07:07:36",
-  "altitude": -39.8,
-  "azimuth": 59.37,
-  "direction": "NE",
-  "distance_km": 385016.25
-}
-```
+## Deploy notes
+- Open SG ports 80/443; Postgres on 5432 internal
+- For TLS: sudo certbot certonly --standalone -d <domain> then docker compose up -d
+- Renewal cron example:
+  `
+  0 3 * * * /usr/bin/certbot renew --quiet --deploy-hook "cd /home/ubuntu/luna && docker compose restart nginx"
+  `
 
-## How it works
-- Uses UTC as the global time reference.
-- Computes Moon position using JPL ephemeris via Skyfield.
-- Converts results into altitude (visibility) and azimuth (direction).
-
-## Open-source philosophy
-- Free to use
-- Free to modify
-- Built for learning  
-License: MIT
-
-## Contributing
-We welcome contributions from students, developers, and astronomy enthusiasts.
-1) Fork the repository  
-2) Create a new branch  
-3) Make your changes  
-4) Submit a Pull Request
-
-Good first contributions: improve UI, add mission data, enhance docs, build mobile features.
-
-## Future impact
-LUNA aims to make astronomy accessible to every student, build a distributed observation network, and serve as a base for satellite tracking, mission visualization, and deep-tech space systems.
-
-## Built by
-WFD DeepTech Labs — building accessible space-tech systems for the future.
-
-## Support
-If you find this project useful: star the repo, fork it, and share it. Let's build space-tech together.
+## Credits
+- Skyfield, Open-Meteo, CelesTrak
+- Powered by WFd DeepTech Labs
