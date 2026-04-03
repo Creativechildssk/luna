@@ -7,16 +7,37 @@ import MoonPhaseVisual from './components/MoonPhaseVisual';
 import SkyMap from './components/SkyMap';
 import Timeline from './components/Timeline';
 import StatCard from './components/StatCard';
+import SelectionBar from './components/SelectionBar';
 
 export default function App() {
   const [lat, setLat] = useState(null);
   const [lon, setLon] = useState(null);
+  const [planet, setPlanet] = useState('mars');
+  const [sat, setSat] = useState('ISS');
 
   const moon = useQuery({
     queryKey: ['moon', lat, lon],
     queryFn: () => api.moonWindow(lat, lon),
     enabled: lat !== null && lon !== null,
     staleTime: 30_000,
+  });
+  const planetQ = useQuery({
+    queryKey: ['planet', planet, lat, lon],
+    queryFn: () => api.planetWindow(planet, lat, lon),
+    enabled: !!lat && !!lon && !!planet,
+    staleTime: 30_000,
+  });
+  const satQ = useQuery({
+    queryKey: ['sat', sat, lat, lon],
+    queryFn: () => api.satelliteWindow(sat, lat, lon, 24),
+    enabled: !!lat && !!lon && !!sat,
+    staleTime: 30_000,
+  });
+  const satTrack = useQuery({
+    queryKey: ['satTrack', sat],
+    queryFn: () => api.satelliteTrack(sat, 1, 60),
+    enabled: !!sat,
+    staleTime: 60_000,
   });
 
   const loading = moon.isLoading || moon.isFetching;
@@ -73,6 +94,8 @@ export default function App() {
         }}
       />
 
+      <SelectionBar planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Visibility</div>
@@ -100,7 +123,7 @@ export default function App() {
       <CountdownGrid data={data} fmtTime={fmtTime} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <SkyMap position={data?.position} userLat={lat} userLon={lon} />
+        <SkyMap position={data?.position} track={satTrack.data} userLat={lat} userLon={lon} />
         <Timeline
           rise={data?.next_moonrise_local}
           best={data?.best_observation_time_local}
@@ -113,6 +136,19 @@ export default function App() {
         <StatCard label="Max altitude" value={data?.max_altitude_deg ? `${data.max_altitude_deg}°` : '—'} sub={data?.time_of_max_altitude_local} />
         <StatCard label="Illumination" value={data?.illumination_percent ? `${data.illumination_percent}%` : '—'} sub={data?.phase_hint} />
         <StatCard label="Days until next rise" value={data?.days_until_next_rise ?? '—'} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <StatCard
+          label={`Planet (${planet}) state`}
+          value={planetQ.data?.visibility_state || '—'}
+          sub={`Rise ${planetQ.data?.rises_in || '—'} · Set ${planetQ.data?.sets_in || '—'}`}
+        />
+        <StatCard
+          label={`Satellite (${sat}) state`}
+          value={satQ.data?.visibility_state || '—'}
+          sub={`Rise ${satQ.data?.rises_in || '—'} · Set ${satQ.data?.sets_in || '—'}`}
+        />
       </div>
 
       {loading && <div className="text-sm text-muted">Loading…</div>}
