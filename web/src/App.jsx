@@ -114,35 +114,35 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-4 space-y-4 dashboard">
+    <div className="max-w-6xl mx-auto px-4 py-4 space-y-4 dashboard">
       <header className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="text-xs text-muted uppercase tracking-wide">LUNA v1.0.0</div>
           <h1 className="text-2xl font-bold">Sky Window</h1>
           <div className="text-sm text-muted">Moon · planets · satellites · visibility and best time to look</div>
         </div>
-        <div className="flex gap-2 items-center">
-          <button
-            className={`px-3 py-1 rounded-lg border border-border ${view === 'moon' ? 'bg-accent text-slate-900' : ''}`}
-            onClick={() => setView('moon')}
-          >
-            Moon
-          </button>
-          <button
-            className={`px-3 py-1 rounded-lg border border-border ${view === 'planet' ? 'bg-accent text-slate-900' : ''}`}
-            onClick={() => setView('planet')}
-          >
-            Planets
-          </button>
-          <button
-            className={`px-3 py-1 rounded-lg border border-border ${view === 'satellite' ? 'bg-accent text-slate-900' : ''}`}
-            onClick={() => setView('satellite')}
-          >
-            Satellites
-          </button>
-          <div className="text-sm text-muted">API: {import.meta.env.VITE_API_BASE || 'http://localhost:8000'}</div>
-        </div>
+        <div className="text-sm text-muted">API: {import.meta.env.VITE_API_BASE || 'http://localhost:8000'}</div>
       </header>
+
+      <div className="card p-2">
+        <div className="flex gap-2 overflow-x-auto">
+          {[
+            { key: 'moon', label: 'Moon' },
+            { key: 'planet', label: 'Planets' },
+            { key: 'satellite', label: 'Satellites' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg border border-border text-center ${
+                view === tab.key ? 'bg-accent text-slate-900' : 'bg-transparent'
+              }`}
+              onClick={() => setView(tab.key)}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {activeError && <ErrorBanner message={`Failed to load data: ${activeError.message}`} onRetry={activeRetry} />}
       {view === 'satellite' && satList.error && (
