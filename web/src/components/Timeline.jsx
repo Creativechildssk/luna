@@ -12,21 +12,18 @@ export default function Timeline({ rise, best, set, fmtTime }) {
       <div className="text-sm text-muted mb-1">Timeline (next window)</div>
 
       {parsed && (
-        <div className="relative h-3 rounded-full bg-slate-700/40 overflow-hidden mb-2">
-          <div
-            className="absolute left-0 top-0 h-full bg-accent/40"
-            style={{ width: `${parsed.progressPct}%` }}
-          />
-          <Marker label="Rise" left={0} />
-          <Marker label="Set" left={100} />
-          {parsed.bestPct != null && <Marker label="Best" left={parsed.bestPct} color="#fbbf24" />}
+        <div className="relative h-3 rounded-full bg-slate-700/40 overflow-hidden mb-4">
+          <div className="absolute left-0 top-0 h-full bg-accent/40" style={{ width: `${parsed.progressPct}%` }} />
+          <Marker label="Rise" left={0} color="#34d399" />
+          <Marker label="Best" left={parsed.bestPct ?? 50} color="#fbbf24" showLabel={parsed.bestPct != null} />
+          <Marker label="Set" left={100} color="#f87171" />
           {parsed.nowPct != null && <Marker label="Now" left={parsed.nowPct} color="#e2e8f0" />}
         </div>
       )}
 
-      <div className="flex gap-4 overflow-x-auto text-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
         {events.map((e) => (
-          <div key={e.label} className="min-w-[140px] px-3 py-2 rounded-lg border border-border bg-[#0f1620]">
+          <div key={e.label} className="px-3 py-2 rounded-lg border border-border bg-[#0f1620]">
             <div className="text-muted text-xs uppercase tracking-wide">{e.label}</div>
             <div className="font-semibold">{fmtTime ? fmtTime(e.t) : e.t}</div>
           </div>
@@ -58,17 +55,17 @@ function clamp(v, min, max) {
   return Math.min(max, Math.max(min, v));
 }
 
-function Marker({ label, left, color = '#34d399' }) {
+function Marker({ label, left, color = '#34d399', showLabel = true }) {
   return (
     <div
-      className="absolute -top-2 flex flex-col items-center text-[10px] text-muted"
+      className="absolute -top-4 flex flex-col items-center text-[10px] text-muted"
       style={{ left: `${left}%`, transform: 'translateX(-50%)' }}
     >
       <div
-        className="w-2 h-2 rounded-full border border-slate-900"
+        className="w-3 h-3 rounded-full border border-slate-900 shadow"
         style={{ backgroundColor: color }}
       />
-      <span className="mt-1">{label}</span>
+      {showLabel && <span className="mt-1">{label}</span>}
     </div>
   );
 }
