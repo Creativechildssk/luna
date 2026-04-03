@@ -20,6 +20,7 @@ export default function App() {
   });
 
   const loading = moon.isLoading || moon.isFetching;
+  const error = moon.error;
   const data = moon.data;
 
   const summary = useMemo(
@@ -45,6 +46,12 @@ export default function App() {
         </div>
         <div className="text-sm text-muted">API: {import.meta.env.VITE_API_BASE || 'http://localhost:8000'}</div>
       </header>
+
+      {error && (
+        <div className="card p-3 border border-red-500 text-red-200 text-sm">
+          Failed to load data: {error.message}
+        </div>
+      )}
 
       <LocationPicker
         onChange={(la, lo) => {
