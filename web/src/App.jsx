@@ -139,7 +139,7 @@ export default function App() {
           </div>
         </div>
 
-        <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase} />
+        <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase || view} />
 
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Status</div>
