@@ -2,6 +2,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from pathlib import Path
 from time import sleep
+import math
+import numpy as np
 
 from skyfield import almanac
 from skyfield.api import Loader, Topos
@@ -113,6 +115,7 @@ def _is_night(lat: float, lon: float, time_iso: Optional[str] = None) -> bool:
 def _phase_hint() -> str:
     """Basic phase description from current phase angle."""
     angle = almanac.phase_angle(planets, "moon", ts.now()).degrees
+    # also used to derive illumination percent elsewhere
     if angle < 45:
         return "waxing crescent"
     if angle < 90:
@@ -279,6 +282,49 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
 
     is_night = _is_night(lat, lon, best_mid_utc or rise_iso)
 
+    # compute minutes_since_rise if currently visible
+    minutes_since_rise = None
+    if rise.get("visible_now"):
+        # search for last rise within past 2 days
+        t1 = ts.now()
+        t0 = t1 - 2  # days
+        site = _topos(lat, lon)
+        rise_set_func = almanac.risings_and_settings(planets, moon, site)
+        times, events = almanac.find_discrete(t0, t1, rise_set_func)
+        last_rise_iso = None
+        for ti, ev in zip(times, events):
+            if ev == 1 and ti.tt <= t1.tt:
+                last_rise_iso = ti.utc_iso()
+        if last_rise_iso:
+            minutes_since_rise = int(round((datetime.utcnow().replace(tzinfo=timezone.utc) -
+                                            datetime.fromisoformat(last_rise_iso.replace("Z", "+00:00"))).total_seconds() / 60))
+
+    # illumination percent (current)
+    illumination_percent = round(float(almanac.fraction_illuminated(planets, "moon", ts.now()) * 100.0), 1)
+
+    # max altitude within window (coarse sampling)
+    max_altitude_deg = None
+    time_of_max_altitude_utc = None
+    if rise_iso and set_iso:
+        start_dt = datetime.fromisoformat(rise_iso.replace("Z", "+00:00"))
+        end_dt = datetime.fromisoformat(set_iso.replace("Z", "+00:00"))
+        if end_dt > start_dt:
+            steps = 60
+            dts = [start_dt + (end_dt - start_dt) * (i / (steps - 1)) for i in range(steps)]
+            t_array = ts.from_datetimes(dts)
+            site = _topos(lat, lon)
+            alts = (earth + site).at(t_array).observe(moon).apparent().altaz()[0].degrees
+            idx = int(np.argmax(alts))
+            max_altitude_deg = round(float(alts[idx]), 2)
+            time_of_max_altitude_utc = dts[idx].replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+
+    days_until_next_rise = None
+    if minutes_until_rise is not None:
+        days_until_next_rise = math.ceil(minutes_until_rise / (60 * 24))
+
+    # alias for clarity
+    next_visible_duration_minutes = duration_minutes
+
     return {
         "visible_now": rise.get("visible_now"),
         "next_moonrise_local": rise.get("next_moonrise_local"),
@@ -286,16 +332,23 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
         "next_moonset_local": _strip_microseconds(to_local_time(set_iso)) if set_iso else None,
         "next_moonset_utc": set_iso,
         "visible_duration_minutes": duration_minutes,
+        "next_visible_duration_minutes": next_visible_duration_minutes,
         "best_observation_time_local": best_mid_local,
         "best_observation_time_utc": best_mid_utc,
         "minutes_until_best": minutes_until_best,
         "minutes_until_rise": minutes_until_rise if not rise.get("visible_now") else None,
         "rises_in": rise.get("rises_in") if not rise.get("visible_now") else None,
+        "minutes_since_rise": minutes_since_rise,
         "minutes_until_set": minutes_until_set,
         "sets_in": moon_set.get("sets_in"),
         "visibility_state": visibility_state,
         "is_night": is_night,
         "phase_hint": _phase_hint(),
+        "illumination_percent": illumination_percent,
+        "max_altitude_deg": max_altitude_deg,
+        "time_of_max_altitude_utc": time_of_max_altitude_utc,
+        "time_of_max_altitude_local": _strip_microseconds(to_local_time(time_of_max_altitude_utc)) if time_of_max_altitude_utc else None,
+        "days_until_next_rise": days_until_next_rise,
         "status_message": status_message,
         "position": {
             "azimuth": vis["azimuth"],
@@ -343,6 +396,8 @@ def get_next_moonrise(
 
     utc_now, local_now = _now_timestamp_pair()
 
+    days_until_next_rise = math.ceil(minutes_until / (60 * 24)) if minutes_until is not None else None
+
     return {
         "timestamp_utc": utc_now,
         "timestamp_local": local_now,
@@ -357,4 +412,5 @@ def get_next_moonrise(
         "best_observation_time_utc": best_midpoint_utc,
         "best_observation_time_local": best_midpoint_local,
         "search_window_days": search_days,
+        "days_until_next_rise": days_until_next_rise,
     }
