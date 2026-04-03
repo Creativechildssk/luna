@@ -19,6 +19,8 @@ export const api = {
     fetchJson('/satellite/window', { identifier: id, lat, lon, hours }),
   satelliteTrack: (id, hours = 1, step_sec = 60) =>
     fetchJson('/satellite/track', { identifier: id, hours, step_sec }),
+  satelliteVisible: (lat, lon, hours = 12, limit = 10) =>
+    fetchJson('/satellite/visible', { lat, lon, hours, limit }),
 };
 
 export function fmt(val, fallback = '—') {

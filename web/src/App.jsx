@@ -8,6 +8,7 @@ import SkyMap from './components/SkyMap';
 import Timeline from './components/Timeline';
 import StatCard from './components/StatCard';
 import SelectionBar from './components/SelectionBar';
+import SatelliteList from './components/SatelliteList';
 
 export default function App() {
   const [lat, setLat] = useState(null);
@@ -33,6 +34,12 @@ export default function App() {
     queryFn: () => api.satelliteWindow(sat, lat, lon, 24),
     enabled: !!lat && !!lon && !!sat,
     staleTime: 30_000,
+  });
+  const satList = useQuery({
+    queryKey: ['satList', lat, lon],
+    queryFn: () => api.satelliteVisible(lat, lon, 12, 10),
+    enabled: !!lat && !!lon && view === 'satellite',
+    staleTime: 60_000,
   });
   const satTrack = useQuery({
     queryKey: ['satTrack', sat],
@@ -185,6 +192,10 @@ export default function App() {
           <StatCard label="Altitude now" value={satQ.data?.position?.altitude != null ? `${satQ.data.position.altitude}°` : '—'} />
           <StatCard label="Direction" value={satQ.data?.position?.direction || '—'} />
         </div>
+      )}
+
+      {view === 'satellite' && (
+        <SatelliteList list={satList.data} onSelect={setSat} loading={satList.isLoading} />
       )}
 
       {loading && <div className="text-sm text-muted">Loading…</div>}
