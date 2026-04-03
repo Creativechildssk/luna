@@ -192,11 +192,14 @@ export default function App() {
       )}
 
       {view === 'satellite' && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard label={`Satellite (${sat}) state`} value={satQ.data?.visibility_state || '—'} sub={`Rise ${satQ.data?.rises_in || '—'} · Set ${satQ.data?.sets_in || '—'}`} />
-          <StatCard label="Altitude now" value={satQ.data?.position?.altitude != null ? `${satQ.data.position.altitude}°` : '—'} />
-          <StatCard label="Direction" value={satQ.data?.position?.direction || '—'} />
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <StatCard label={`Satellite (${sat}) state`} value={satQ.data?.visibility_state || '—'} sub={`Rise ${satQ.data?.rises_in || '—'} · Set ${satQ.data?.sets_in || '—'}`} />
+            <StatCard label="Altitude now" value={satQ.data?.position?.altitude != null ? `${satQ.data.position.altitude}°` : '—'} />
+            <StatCard label="Direction" value={satQ.data?.position?.direction || '—'} />
+          </div>
+          <SatelliteList list={satList.data} onSelect={setSat} loading={satList.isLoading} />
+        </>
       )}
 
       {view === 'satellite' && (
