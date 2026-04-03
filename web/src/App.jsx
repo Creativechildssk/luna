@@ -97,7 +97,7 @@ export default function App() {
   const quality = useMemo(() => computeQuality(activeData, weather.data), [activeData, weather.data]);
 
   const fmtTime = (ts) => {
-    if (!ts) return 'â€”';
+    if (!ts) return '—';
     const d = new Date(ts);
     return d.toLocaleString(undefined, {
       year: 'numeric',
@@ -115,7 +115,7 @@ export default function App() {
         <div>
           <div className="text-xs text-muted uppercase tracking-wide">LUNA v1.0.0</div>
           <h1 className="text-2xl font-bold">Sky Window</h1>
-          <div className="text-sm text-muted">Moon, planets, satellites Â· visibility and best time to look</div>
+          <div className="text-sm text-muted">Moon, planets, satellites · visibility and best time to look</div>
         </div>
         <div className="flex gap-2 items-center">
           <button
@@ -163,10 +163,10 @@ export default function App() {
             {summary.visible ? 'Visible now' : 'Below horizon'}
           </div>
           <div className="text-sm text-muted">
-            Az {fmtDeg(summary.azimuth)}, Alt {fmtDeg(summary.altitude)}, Dir {summary.direction ?? 'â€”'}
+            Az {fmtDeg(summary.azimuth)}, Alt {fmtDeg(summary.altitude)}, Dir {summary.direction ?? '—'}
           </div>
           <div className="text-sm text-muted">
-            Distance {summary.distance_km ? `${Math.round(summary.distance_km)} km` : 'â€”'}
+            Distance {summary.distance_km ? `${Math.round(summary.distance_km)} km` : '—'}
           </div>
         </div>
 
@@ -177,7 +177,7 @@ export default function App() {
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Status</div>
           <div className="text-base">{summary.status || 'Set a location to load data.'}</div>
-          <div className="text-xs text-muted">State: {summary.state || 'â€”'}</div>
+          <div className="text-xs text-muted">State: {summary.state || '—'}</div>
           <div className="text-xs text-muted">Night? {summary.is_night ? 'Yes' : 'No'}</div>
         </div>
 
@@ -194,12 +194,12 @@ export default function App() {
             </div>
             <div className="card p-4 space-y-2">
               <div className="text-sm text-muted mb-1">Satellite data ({sat})</div>
-              <div className="text-lg font-semibold">{activeData?.visibility_state || 'â€”'}</div>
+              <div className="text-lg font-semibold">{activeData?.visibility_state || '—'}</div>
               <div className="text-sm text-muted">
-                Rise {activeData?.rises_in || 'â€”'} Â· Set {activeData?.sets_in || 'â€”'}
+                Rise {activeData?.rises_in || '—'} · Set {activeData?.sets_in || '—'}
               </div>
-              <div className="text-sm text-muted">Alt {fmtDeg(activeData?.position?.altitude)} Â· Dir {activeData?.position?.direction || 'â€”'}</div>
-              <div className="text-sm text-muted">Distance {activeData?.position?.distance_km ? `${Math.round(activeData.position.distance_km)} km` : 'â€”'}</div>
+              <div className="text-sm text-muted">Alt {fmtDeg(activeData?.position?.altitude)} · Dir {activeData?.position?.direction || '—'}</div>
+              <div className="text-sm text-muted">Distance {activeData?.position?.distance_km ? `${Math.round(activeData.position.distance_km)} km` : '—'}</div>
             </div>
           </div>
 
@@ -264,18 +264,18 @@ export default function App() {
       {view === 'moon' && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <StatCard label="Max altitude" value={activeData?.max_altitude_deg != null ? fmtDeg(activeData.max_altitude_deg) : 'â€”'} sub={fmtTime(activeData?.time_of_max_altitude_local)} />
-            <StatCard label="Illumination" value={activeData?.illumination_percent ? `${activeData.illumination_percent}%` : 'â€”'} sub={activeData?.phase_hint} />
-            <StatCard label="Days until next rise" value={activeData?.days_until_next_rise ?? 'â€”'} />
+            <StatCard label="Max altitude" value={activeData?.max_altitude_deg != null ? fmtDeg(activeData.max_altitude_deg) : '—'} sub={fmtTime(activeData?.time_of_max_altitude_local)} />
+            <StatCard label="Illumination" value={activeData?.illumination_percent ? `${activeData.illumination_percent}%` : '—'} sub={activeData?.phase_hint} />
+            <StatCard label="Days until next rise" value={activeData?.days_until_next_rise ?? '—'} />
           </div>
         </>
       )}
 
       {view === 'planet' && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <StatCard label={`Planet (${planet}) state`} value={planetQ.data?.visibility_state || 'â€”'} sub={`Rise ${planetQ.data?.rises_in || 'â€”'} Â· Set ${planetQ.data?.sets_in || 'â€”'}`} />
-          <StatCard label="Distance" value={planetQ.data?.position?.distance_km ? `${Math.round(planetQ.data.position.distance_km)} km` : 'â€”'} />
-          <StatCard label="Altitude now" value={planetQ.data?.position?.altitude != null ? fmtDeg(planetQ.data.position.altitude) : 'â€”'} />
+          <StatCard label={`Planet (${planet}) state`} value={planetQ.data?.visibility_state || '—'} sub={`Rise ${planetQ.data?.rises_in || '—'} · Set ${planetQ.data?.sets_in || '—'}`} />
+          <StatCard label="Distance" value={planetQ.data?.position?.distance_km ? `${Math.round(planetQ.data.position.distance_km)} km` : '—'} />
+          <StatCard label="Altitude now" value={planetQ.data?.position?.altitude != null ? fmtDeg(planetQ.data.position.altitude) : '—'} />
         </div>
       )}
 
@@ -348,6 +348,7 @@ function weatherDetails(weather) {
 }
 
 function fmtDeg(val) {
-  if (val === null || val === undefined) return 'â€”';
+  if (val === null || val === undefined) return '—';
   return `${val}\u00b0`;
 }
+
