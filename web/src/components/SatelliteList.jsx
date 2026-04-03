@@ -3,7 +3,7 @@ export default function SatelliteList({ list, onSelect, loading }) {
     <div className="card p-4">
       <div className="text-sm text-muted mb-2">Satellites in next 12h</div>
       {loading && <div className="text-sm text-muted">Loading…</div>}
-      {!loading && (!list || list.length === 0) && <div className="text-sm text-muted">None found.</div>}
+      {!loading && (!list || list.length === 0) && <div className="text-sm text-muted">None found (backend may be down or no passes).</div>}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {(list || []).map((sat) => (
           <button

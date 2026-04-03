@@ -120,6 +120,11 @@ export default function App() {
           Failed to load data: {activeError.message}
         </div>
       )}
+      {view === 'satellite' && satList.error && (
+        <div className="card p-3 border border-red-500 text-red-200 text-sm">
+          Satellites list error: {satList.error.message}
+        </div>
+      )}
 
       <LocationPicker
         onChange={(la, lo) => {
