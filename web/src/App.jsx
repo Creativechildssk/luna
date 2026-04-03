@@ -9,6 +9,7 @@ import Timeline from './components/Timeline';
 import StatCard from './components/StatCard';
 import SelectionBar from './components/SelectionBar';
 import SatelliteList from './components/SatelliteList';
+import ErrorBanner from './components/ErrorBanner';
 
 export default function App() {
   const [lat, setLat] = useState(null);
@@ -52,6 +53,7 @@ export default function App() {
 
   const activeData = view === 'moon' ? moon.data : view === 'planet' ? planetQ.data : satQ.data;
   const activeError = view === 'moon' ? moon.error : view === 'planet' ? planetQ.error : satQ.error;
+  const activeRetry = view === 'moon' ? moon.refetch : view === 'planet' ? planetQ.refetch : satQ.refetch;
   const loading =
     (view === 'moon' && (moon.isLoading || moon.isFetching)) ||
     (view === 'planet' && planetQ.isLoading) ||
@@ -128,15 +130,9 @@ export default function App() {
         </div>
       </header>
 
-      {activeError && (
-        <div className="card p-3 border border-red-500 text-red-200 text-sm">
-          Failed to load data: {activeError.message}
-        </div>
-      )}
+      {activeError && <ErrorBanner message={`Failed to load data: ${activeError.message}`} onRetry={activeRetry} />}
       {view === 'satellite' && satList.error && (
-        <div className="card p-3 border border-red-500 text-red-200 text-sm">
-          Satellites list error: {satList.error.message}
-        </div>
+        <ErrorBanner message={`Satellites list error: ${satList.error.message}`} onRetry={satList.refetch} />
       )}
 
       <LocationPicker
