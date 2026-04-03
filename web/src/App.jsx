@@ -21,6 +21,7 @@ export default function App() {
   const [view, setView] = useState('moon'); // moon | planet | satellite
   const [satRange, setSatRange] = useState('today'); // today|tomorrow|week|month
   const [satSearch, setSatSearch] = useState('');
+  const DEG = '\u00b0';
 
   const moon = useQuery({
     queryKey: ['moon', lat, lon],
@@ -162,7 +163,7 @@ export default function App() {
             {summary.visible ? 'Visible now' : 'Below horizon'}
           </div>
           <div className="text-sm text-muted">
-            Az {summary.azimuth ?? '—'}°, Alt {summary.altitude ?? '—'}°, Dir {summary.direction ?? '—'}
+            Az {fmtDeg(summary.azimuth)}, Alt {fmtDeg(summary.altitude)}, Dir {summary.direction ?? '—'}
           </div>
           <div className="text-sm text-muted">
             Distance {summary.distance_km ? `${Math.round(summary.distance_km)} km` : '—'}
@@ -197,7 +198,7 @@ export default function App() {
               <div className="text-sm text-muted">
                 Rise {activeData?.rises_in || '—'} · Set {activeData?.sets_in || '—'}
               </div>
-              <div className="text-sm text-muted">Alt {activeData?.position?.altitude ?? '—'}° · Dir {activeData?.position?.direction || '—'}</div>
+              <div className="text-sm text-muted">Alt {fmtDeg(activeData?.position?.altitude)} · Dir {activeData?.position?.direction || '—'}</div>
               <div className="text-sm text-muted">Distance {activeData?.position?.distance_km ? `${Math.round(activeData.position.distance_km)} km` : '—'}</div>
             </div>
           </div>
@@ -263,7 +264,7 @@ export default function App() {
       {view === 'moon' && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <StatCard label="Max altitude" value={activeData?.max_altitude_deg ? `${activeData.max_altitude_deg}°` : '—'} sub={fmtTime(activeData?.time_of_max_altitude_local)} />
+            <StatCard label="Max altitude" value={activeData?.max_altitude_deg != null ? fmtDeg(activeData.max_altitude_deg) : '—'} sub={fmtTime(activeData?.time_of_max_altitude_local)} />
             <StatCard label="Illumination" value={activeData?.illumination_percent ? `${activeData.illumination_percent}%` : '—'} sub={activeData?.phase_hint} />
             <StatCard label="Days until next rise" value={activeData?.days_until_next_rise ?? '—'} />
           </div>
@@ -274,7 +275,7 @@ export default function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <StatCard label={`Planet (${planet}) state`} value={planetQ.data?.visibility_state || '—'} sub={`Rise ${planetQ.data?.rises_in || '—'} · Set ${planetQ.data?.sets_in || '—'}`} />
           <StatCard label="Distance" value={planetQ.data?.position?.distance_km ? `${Math.round(planetQ.data.position.distance_km)} km` : '—'} />
-          <StatCard label="Altitude now" value={planetQ.data?.position?.altitude != null ? `${planetQ.data.position.altitude}°` : '—'} />
+          <StatCard label="Altitude now" value={planetQ.data?.position?.altitude != null ? fmtDeg(planetQ.data.position.altitude) : '—'} />
         </div>
       )}
 
@@ -344,4 +345,9 @@ function weatherDetails(weather) {
   if (cloud == null) return '';
   const quality = cloud < 20 ? 'Clear sky' : cloud < 50 ? 'Partly cloudy' : 'Cloudy';
   return `${quality} • Cloud cover ${cloud}%`;
+}
+
+function fmtDeg(val) {
+  if (val === null || val === undefined) return '—';
+  return `${val}\u00b0`;
 }

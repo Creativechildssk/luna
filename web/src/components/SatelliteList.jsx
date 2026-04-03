@@ -1,29 +1,28 @@
-export default function SatelliteList({ list, onSelect, loading, title = 'Satellites' }) {
+export default function SatelliteList({ title, list, onSelect, loading }) {
   return (
-    <div className="card p-4">
-      <div className="text-sm text-muted mb-2">{title}</div>
-      {loading && <div className="text-sm text-muted">Loadingâ€¦</div>}
-      {!loading && (!list || list.length === 0) && <div className="text-sm text-muted">None found (backend may be down or no passes).</div>}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+    <div className="card p-3 space-y-2">
+      <div className="text-sm text-muted">{title}</div>
+      {loading && <div className="text-sm text-muted">Loading…</div>}
+      {!loading && (!list || list.length === 0) && <div className="text-sm text-muted">None found</div>}
+      <div className="divide-y divide-border">
         {(list || []).map((sat) => (
           <button
             key={sat.satellite}
-            className="text-left border border-border rounded-lg px-3 py-2 bg-[#0f1620] hover:border-accent"
-            onClick={() => onSelect && onSelect(sat.satellite)}
+            className="w-full text-left py-2 hover:bg-white/5 rounded-lg px-2"
+            onClick={() => onSelect(sat.identifier || sat.satellite)}
           >
             <div className="font-semibold">{sat.satellite}</div>
             <div className="text-xs text-muted">
-              {sat.visible_now ? 'Visible now' : sat.rises_in ? `Rises ${sat.rises_in}` : 'No rise in window'}
-            </div>
-            <div className="text-xs text-muted">
-              State: {sat.visibility_state} Â· Alt {sat.position?.altitude ?? 'â€”'}Â°
-            </div>
-            <div className="text-xs text-muted">
-              Range: {sat.position?.distance_km ? `${Math.round(sat.position.distance_km)} km` : 'â€”'}
+              State: {sat.visibility_state} · Alt {fmtDeg(sat.position?.altitude)} · Dir {sat.position?.direction || '—'}
             </div>
           </button>
         ))}
       </div>
     </div>
   );
+}
+
+function fmtDeg(val) {
+  if (val === null || val === undefined) return '—';
+  return `${val}\u00b0`;
 }
