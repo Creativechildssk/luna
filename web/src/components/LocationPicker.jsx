@@ -1,10 +1,11 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 
 export default function LocationPicker({ onChange }) {
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const autoTimer = useRef(null);
 
   const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.hostname === "localhost");
 
@@ -34,6 +35,22 @@ export default function LocationPicker({ onChange }) {
     }
   }, [isSecure]);
 
+  // auto-apply typed coords with debounce
+  useEffect(() => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    const la = parseFloat(lat);
+    const lo = parseFloat(lon);
+    if (Number.isFinite(la) && Number.isFinite(lo)) {
+      autoTimer.current = setTimeout(() => {
+        onChange(la, lo);
+        setMsg("Applied typed coordinates");
+      }, 600);
+    }
+    return () => {
+      if (autoTimer.current) clearTimeout(autoTimer.current);
+    };
+  }, [lat, lon, onChange]);
+
   const canUseGeo = useMemo(() => isSecure && typeof navigator !== "undefined" && !!navigator.geolocation, [isSecure]);
 
   return (
@@ -59,8 +76,6 @@ export default function LocationPicker({ onChange }) {
             inputMode="decimal"
           />
         </label>
-      </div>
-      <div className="flex gap-2 flex-wrap items-center">
         <button
           className="px-4 py-2 rounded-lg bg-accent text-slate-900 font-semibold inline-flex items-center gap-2 md:mt-6"
           onClick={() => {
@@ -71,7 +86,7 @@ export default function LocationPicker({ onChange }) {
           disabled={!lat || !lon}
           title="Apply typed coordinates"
         >
-          ?? Apply
+          🔍<span className="hidden sm:inline"> Apply</span>
         </button>
         <button
           className="px-3 py-2 rounded-lg border border-border inline-flex items-center gap-2 md:mt-6"
@@ -100,11 +115,10 @@ export default function LocationPicker({ onChange }) {
           disabled={busy || !canUseGeo}
           title={canUseGeo ? "Use browser location" : "Geolocation blocked on HTTP"}
         >
-          {busy ? "? Locating�" : "?? Locate"}
+          {busy ? "⏳" : "🎯"}<span className="hidden sm:inline"> Locate</span>
         </button>
       </div>
       {msg && <div className="text-sm text-muted">{msg}</div>}
     </div>
   );
 }
-
