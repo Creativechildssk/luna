@@ -4,6 +4,7 @@ import { api } from './api';
 import LocationPicker from './components/LocationPicker';
 import CountdownGrid from './components/CountdownGrid';
 import MoonPhaseVisual from './components/MoonPhaseVisual';
+import SkyCompass from './components/SkyCompass';
 import SkyMap from './components/SkyMap';
 import Timeline from './components/Timeline';
 import StatCard from './components/StatCard';
@@ -146,7 +147,7 @@ export default function App() {
         <SelectionBar view={view} planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 stats-grid">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 stats-grid">
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Visibility</div>
           <div className="text-lg font-semibold">
@@ -161,6 +162,8 @@ export default function App() {
         </div>
 
         <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase || view} />
+
+        <SkyCompass azimuth={summary.azimuth} altitude={summary.altitude} direction={summary.direction} />
 
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Status</div>
