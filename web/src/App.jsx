@@ -16,6 +16,8 @@ export default function App() {
   const [planet, setPlanet] = useState('mars');
   const [sat, setSat] = useState('ISS');
   const [view, setView] = useState('moon'); // moon | planet | satellite
+  const [satRange, setSatRange] = useState('today'); // today|tomorrow|week|month
+  const [satSearch, setSatSearch] = useState('');
 
   const moon = useQuery({
     queryKey: ['moon', lat, lon],
@@ -37,7 +39,7 @@ export default function App() {
   });
   const satList = useQuery({
     queryKey: ['satList', lat, lon],
-    queryFn: () => api.satelliteVisible(lat, lon, 12, 10),
+    queryFn: () => api.satelliteVisible(lat, lon, satRange === 'today' ? 24 : satRange === 'tomorrow' ? 48 : satRange === 'week' ? 168 : 720, 10),
     enabled: !!lat && !!lon && view === 'satellite',
     staleTime: 60_000,
   });
@@ -54,6 +56,17 @@ export default function App() {
     (view === 'moon' && (moon.isLoading || moon.isFetching)) ||
     (view === 'planet' && planetQ.isLoading) ||
     (view === 'satellite' && satQ.isLoading);
+  const alerts = useQuery({
+    queryKey: ['alerts'],
+    queryFn: () => api.alerts(),
+    enabled: view === 'satellite',
+    staleTime: 60_000,
+  });
+
+  const filteredSatList =
+    view === 'satellite' && satList.data
+      ? satList.data.filter((s) => s.satellite.toLowerCase().includes(satSearch.toLowerCase()))
+      : [];
 
   const summary = useMemo(
     () => ({
@@ -163,15 +176,80 @@ export default function App() {
 
       <CountdownGrid data={activeData} fmtTime={fmtTime} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <SkyMap position={activeData?.position} track={view === 'satellite' ? satTrack.data : null} userLat={lat} userLon={lon} />
-        <Timeline
-          rise={activeData?.next_moonrise_local || activeData?.next_rise_local}
-          best={activeData?.best_observation_time_local}
-          set={activeData?.next_moonset_local || activeData?.next_set_local}
-          fmtTime={fmtTime}
-        />
-      </div>
+      {view === 'satellite' ? (
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <div className="lg:col-span-2">
+              <SkyMap position={activeData?.position} track={satTrack.data} userLat={lat} userLon={lon} />
+            </div>
+            <div className="card p-4 space-y-2">
+              <div className="text-sm text-muted mb-1">Satellite data ({sat})</div>
+              <div className="text-lg font-semibold">{activeData?.visibility_state || '—'}</div>
+              <div className="text-sm text-muted">
+                Rise {activeData?.rises_in || '—'} · Set {activeData?.sets_in || '—'}
+              </div>
+              <div className="text-sm text-muted">Alt {activeData?.position?.altitude ?? '—'}° · Dir {activeData?.position?.direction || '—'}</div>
+              <div className="text-sm text-muted">Distance {activeData?.position?.distance_km ? `${Math.round(activeData.position.distance_km)} km` : '—'}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+            <div className="lg:col-span-2 space-y-2">
+              <div className="card p-3 flex flex-wrap gap-3 items-center">
+                <input
+                  className="rounded-lg border border-border bg-[#0f1620] px-3 py-2 flex-1 min-w-[200px]"
+                  placeholder="Search satellite by name or NORAD..."
+                  value={satSearch}
+                  onChange={(e) => setSatSearch(e.target.value)}
+                />
+                <div className="flex gap-2 text-sm">
+                  {['today', 'tomorrow', 'week', 'month'].map((r) => (
+                    <button
+                      key={r}
+                      className={`px-3 py-1 rounded-lg border border-border ${satRange === r ? 'bg-accent text-slate-900' : ''}`}
+                      onClick={() => setSatRange(r)}
+                    >
+                      {r[0].toUpperCase() + r.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <SatelliteList
+                title={`Satellites in next ${satRange}`}
+                list={filteredSatList}
+                onSelect={setSat}
+                loading={satList.isLoading}
+              />
+            </div>
+            <div className="card p-4 space-y-2">
+              <div className="text-sm text-muted">Alerts</div>
+              {alerts.isLoading && <div className="text-sm text-muted">Loading…</div>}
+              {!alerts.isLoading && (!alerts.data || alerts.data.length === 0) && (
+                <div className="text-sm text-muted">None</div>
+              )}
+              <div className="space-y-2">
+                {(alerts.data || []).map((a) => (
+                  <div key={a.id} className="border border-border rounded-lg px-3 py-2 text-sm">
+                    <div className="font-semibold">{a.identifier}</div>
+                    <div className="text-muted">Thresh: {a.threshold_minutes} min</div>
+                    <div className="text-muted">URL: {a.callback_url}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <SkyMap position={activeData?.position} track={view === 'satellite' ? satTrack.data : null} userLat={lat} userLon={lon} />
+          <Timeline
+            rise={activeData?.next_moonrise_local || activeData?.next_rise_local}
+            best={activeData?.best_observation_time_local}
+            set={activeData?.next_moonset_local || activeData?.next_set_local}
+            fmtTime={fmtTime}
+          />
+        </div>
+      )}
 
       {view === 'moon' && (
         <>
@@ -189,21 +267,6 @@ export default function App() {
           <StatCard label="Distance" value={planetQ.data?.position?.distance_km ? `${Math.round(planetQ.data.position.distance_km)} km` : '—'} />
           <StatCard label="Altitude now" value={planetQ.data?.position?.altitude != null ? `${planetQ.data.position.altitude}°` : '—'} />
         </div>
-      )}
-
-      {view === 'satellite' && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <StatCard label={`Satellite (${sat}) state`} value={satQ.data?.visibility_state || '—'} sub={`Rise ${satQ.data?.rises_in || '—'} · Set ${satQ.data?.sets_in || '—'}`} />
-            <StatCard label="Altitude now" value={satQ.data?.position?.altitude != null ? `${satQ.data.position.altitude}°` : '—'} />
-            <StatCard label="Direction" value={satQ.data?.position?.direction || '—'} />
-          </div>
-          <SatelliteList list={satList.data} onSelect={setSat} loading={satList.isLoading} />
-        </>
-      )}
-
-      {view === 'satellite' && (
-        <SatelliteList list={satList.data} onSelect={setSat} loading={satList.isLoading} />
       )}
 
       {loading && <div className="text-sm text-muted">Loading…</div>}
