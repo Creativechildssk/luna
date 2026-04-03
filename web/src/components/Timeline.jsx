@@ -1,4 +1,4 @@
-export default function Timeline({ rise, best, set }) {
+export default function Timeline({ rise, best, set, fmtTime }) {
   const events = [
     { t: rise, label: 'Rise' },
     { t: best, label: 'Best' },
@@ -12,7 +12,7 @@ export default function Timeline({ rise, best, set }) {
         {events.map((e) => (
           <div key={e.label} className="min-w-[140px] px-3 py-2 rounded-lg border border-border bg-[#0f1620]">
             <div className="text-muted text-xs uppercase tracking-wide">{e.label}</div>
-            <div className="font-semibold">{e.t}</div>
+            <div className="font-semibold">{fmtTime ? fmtTime(e.t) : e.t}</div>
           </div>
         ))}
         {!events.length && <div className="text-muted">No events in window.</div>}

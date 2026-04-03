@@ -36,6 +36,19 @@ export default function App() {
     [data]
   );
 
+  const fmtTime = (ts) => {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
       <header className="flex items-center justify-between flex-wrap gap-2">
@@ -84,14 +97,15 @@ export default function App() {
         </div>
       </div>
 
-      <CountdownGrid data={data} />
+      <CountdownGrid data={data} fmtTime={fmtTime} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <SkyMap position={data?.position} />
+        <SkyMap position={data?.position} userLat={lat} userLon={lon} />
         <Timeline
           rise={data?.next_moonrise_local}
           best={data?.best_observation_time_local}
           set={data?.next_moonset_local}
+          fmtTime={fmtTime}
         />
       </div>
 
