@@ -178,6 +178,10 @@ def get_satellite_position(identifier: str, lat: float, lon: float):
 
 def get_satellite_window(identifier: str, lat: float, lon: float, search_hours: int = 24):
     sat = _get_sat(identifier)
+    return _window_for_sat(sat, identifier, lat, lon, search_hours)
+
+
+def _window_for_sat(sat, identifier: str, lat: float, lon: float, search_hours: int = 24):
     site = _topos(lat, lon)
 
     t0 = ts.now()
@@ -224,7 +228,6 @@ def get_satellite_window(identifier: str, lat: float, lon: float, search_hours: 
     else:
         visibility_state = "below_horizon"
 
-    # For satellites, "phase_hint" not applicable; return altitude-based note
     status_parts = []
     if visible:
         status_parts.append("Satellite above horizon")
@@ -261,6 +264,7 @@ def get_satellite_window(identifier: str, lat: float, lon: float, search_hours: 
             "direction": pos["direction"],
             "direction_label": pos["direction_label"],
             "altitude": pos["altitude"],
+            "distance_km": pos["distance_km"],
             "elevation_state": "above_horizon" if visible else "below_horizon",
         },
     }

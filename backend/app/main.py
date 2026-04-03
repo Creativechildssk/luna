@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api import moon, health, planet, satellite, alerts
+from app.api import satellite_visible
 from app.services.alert_worker import run_alert_worker
 import asyncio
 
@@ -21,6 +22,7 @@ app.include_router(moon.router, prefix="/moon", tags=["Moon"])
 app.include_router(planet.router, prefix="/planet", tags=["Planet"])
 app.include_router(satellite.router, prefix="/satellite", tags=["Satellite"])
 app.include_router(alerts.router, prefix="/alerts", tags=["Alerts"])
+app.include_router(satellite_visible.router, prefix="/satellite", tags=["Satellite"])
 
 
 @app.on_event("startup")
