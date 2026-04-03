@@ -41,21 +41,27 @@ export default function App() {
     staleTime: 60_000,
   });
 
-  const loading = moon.isLoading || moon.isFetching;
-  const error = moon.error;
-  const data = moon.data;
+  const activeData = view === 'moon' ? moon.data : view === 'planet' ? planetQ.data : satQ.data;
+  const activeError = view === 'moon' ? moon.error : view === 'planet' ? planetQ.error : satQ.error;
+  const loading =
+    (view === 'moon' && (moon.isLoading || moon.isFetching)) ||
+    (view === 'planet' && planetQ.isLoading) ||
+    (view === 'satellite' && satQ.isLoading);
 
   const summary = useMemo(
     () => ({
-      visible: data?.visible_now,
-      phase: data?.phase_hint,
-      illum: data?.illumination_percent,
-      direction: data?.position?.direction,
-      azimuth: data?.position?.azimuth,
-      altitude: data?.position?.altitude,
-      distance_km: data?.position?.distance_km,
+      visible: activeData?.visible_now,
+      phase: activeData?.phase_hint,
+      illum: activeData?.illumination_percent,
+      direction: activeData?.position?.direction,
+      azimuth: activeData?.position?.azimuth,
+      altitude: activeData?.position?.altitude,
+      distance_km: activeData?.position?.distance_km,
+      status: activeData?.status_message,
+      state: activeData?.visibility_state,
+      is_night: activeData?.is_night,
     }),
-    [data]
+    [activeData]
   );
 
   const fmtTime = (ts) => {
@@ -102,16 +108,10 @@ export default function App() {
         </div>
       </header>
 
-      {error && (
+      {activeError && (
         <div className="card p-3 border border-red-500 text-red-200 text-sm">
-          Failed to load data: {error.message}
+          Failed to load data: {activeError.message}
         </div>
-      )}
-      {view === 'planet' && planetQ.error && (
-        <div className="card p-3 border border-red-500 text-red-200 text-sm">Planet fetch failed: {planetQ.error.message}</div>
-      )}
-      {view === 'satellite' && satQ.error && (
-        <div className="card p-3 border border-red-500 text-red-200 text-sm">Satellite fetch failed: {satQ.error.message}</div>
       )}
 
       <LocationPicker
@@ -143,51 +143,20 @@ export default function App() {
 
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Status</div>
-          <div className="text-base">{data?.status_message || 'Set a location to load data.'}</div>
-          <div className="text-xs text-muted">State: {data?.visibility_state || '—'}</div>
-          <div className="text-xs text-muted">Night? {data?.is_night ? 'Yes' : 'No'}</div>
+          <div className="text-base">{summary.status || 'Set a location to load data.'}</div>
+          <div className="text-xs text-muted">State: {summary.state || '—'}</div>
+          <div className="text-xs text-muted">Night? {summary.is_night ? 'Yes' : 'No'}</div>
         </div>
       </div>
 
-      <CountdownGrid data={data} fmtTime={fmtTime} />
+      <CountdownGrid data={activeData} fmtTime={fmtTime} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <SkyMap
-          position={
-            view === 'moon'
-              ? data?.position
-              : view === 'planet'
-              ? planetQ.data?.position
-              : view === 'satellite'
-              ? satQ.data?.position
-              : null
-          }
-          track={view === 'satellite' ? satTrack.data : null}
-          userLat={lat}
-          userLon={lon}
-        />
+        <SkyMap position={activeData?.position} track={view === 'satellite' ? satTrack.data : null} userLat={lat} userLon={lon} />
         <Timeline
-          rise={
-            view === 'moon'
-              ? data?.next_moonrise_local
-              : view === 'planet'
-              ? planetQ.data?.next_rise_local
-              : satQ.data?.next_rise_local
-          }
-          best={
-            view === 'moon'
-              ? data?.best_observation_time_local
-              : view === 'planet'
-              ? planetQ.data?.best_observation_time_local
-              : satQ.data?.best_observation_time_local
-          }
-          set={
-            view === 'moon'
-              ? data?.next_moonset_local
-              : view === 'planet'
-              ? planetQ.data?.next_set_local
-              : satQ.data?.next_set_local
-          }
+          rise={activeData?.next_moonrise_local || activeData?.next_rise_local}
+          best={activeData?.best_observation_time_local}
+          set={activeData?.next_moonset_local || activeData?.next_set_local}
           fmtTime={fmtTime}
         />
       </div>
@@ -195,9 +164,9 @@ export default function App() {
       {view === 'moon' && (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <StatCard label="Max altitude" value={data?.max_altitude_deg ? `${data.max_altitude_deg}°` : '—'} sub={fmtTime(data?.time_of_max_altitude_local)} />
-            <StatCard label="Illumination" value={data?.illumination_percent ? `${data.illumination_percent}%` : '—'} sub={data?.phase_hint} />
-            <StatCard label="Days until next rise" value={data?.days_until_next_rise ?? '—'} />
+            <StatCard label="Max altitude" value={activeData?.max_altitude_deg ? `${activeData.max_altitude_deg}°` : '—'} sub={fmtTime(activeData?.time_of_max_altitude_local)} />
+            <StatCard label="Illumination" value={activeData?.illumination_percent ? `${activeData.illumination_percent}%` : '—'} sub={activeData?.phase_hint} />
+            <StatCard label="Days until next rise" value={activeData?.days_until_next_rise ?? '—'} />
           </div>
         </>
       )}
