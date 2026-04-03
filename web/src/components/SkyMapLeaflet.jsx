@@ -16,7 +16,7 @@ export default function SkyMapLeaflet({ position, track, userLat, userLon }) {
   const center = userLat != null && userLon != null ? [userLat, userLon] : [0, 0];
 
   return (
-    <div className="h-72 rounded-lg overflow-hidden border border-border">
+    <div className="h-72 sm:h-80 md:h-96 rounded-lg overflow-hidden border border-border map-container">
       <MapContainer center={center} zoom={userLat != null ? 6 : 2} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <Recenter lat={userLat} lon={userLon} zoom={userLat != null ? 6 : 2} />

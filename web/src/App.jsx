@@ -98,7 +98,7 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-4 space-y-4">
+    <div className="max-w-5xl mx-auto px-4 py-4 space-y-4 dashboard">
       <header className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="text-xs text-muted uppercase tracking-wide">LUNA v1.0.0</div>
@@ -150,7 +150,7 @@ export default function App() {
         <SelectionBar view={view} planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 stats-grid">
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Visibility</div>
           <div className="text-lg font-semibold">
