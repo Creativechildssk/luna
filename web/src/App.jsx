@@ -11,6 +11,7 @@ import StatCard from './components/StatCard';
 import SelectionBar from './components/SelectionBar';
 import SatelliteList from './components/SatelliteList';
 import ErrorBanner from './components/ErrorBanner';
+import QualityCard from './components/QualityCard';
 
 export default function App() {
   const [lat, setLat] = useState(null);
@@ -86,6 +87,7 @@ export default function App() {
     }),
     [activeData]
   );
+  const quality = useMemo(() => computeQuality(activeData), [activeData]);
 
   const fmtTime = (ts) => {
     if (!ts) return '—';
@@ -147,7 +149,7 @@ export default function App() {
         <SelectionBar view={view} planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3 stats-grid">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 stats-grid">
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Visibility</div>
           <div className="text-lg font-semibold">
@@ -171,6 +173,8 @@ export default function App() {
           <div className="text-xs text-muted">State: {summary.state || '—'}</div>
           <div className="text-xs text-muted">Night? {summary.is_night ? 'Yes' : 'No'}</div>
         </div>
+
+        <QualityCard score={quality.score} label={quality.label} details={quality.details} />
       </div>
 
       <CountdownGrid data={activeData} fmtTime={fmtTime} />
@@ -271,4 +275,39 @@ export default function App() {
       {loading && <div className="text-sm text-muted">Loading…</div>}
     </div>
   );
+}
+
+function computeQuality(data) {
+  if (!data) return { score: null, label: '', details: '' };
+  let score = 0;
+
+  // visibility state weight
+  if (data.visible_now) score += 30;
+  else if (data.visibility_state === 'rising_soon') score += 15;
+  else if (data.visibility_state === 'setting_soon') score += 10;
+
+  // altitude: reward higher alt, penalize negative (clamped)
+  if (typeof data.position?.altitude === 'number') {
+    score += Math.max(-20, Math.min(30, data.position.altitude));
+  }
+
+  // night bonus
+  if (data.is_night === true) score += 20;
+  else score -= 10;
+
+  // illumination: mid phases favored, still add some for any moon
+  if (typeof data.illumination_percent === 'number') {
+    const illum = data.illumination_percent;
+    if (illum >= 30 && illum <= 85) score += 15;
+    else score += 5;
+  }
+
+  // distance: closer small bonus
+  if (typeof data.position?.distance_km === 'number') {
+    if (data.position.distance_km < 380000) score += 5;
+  }
+
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Poor';
+  return { score, label, details: '' };
 }
