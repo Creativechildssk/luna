@@ -6,7 +6,7 @@ export default function SkyMapLeaflet({ position, track, userLat, userLon }) {
 
   return (
     <div className="h-72 rounded-lg overflow-hidden border border-border">
-      <MapContainer center={[0, 0]} zoom={2} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={center} zoom={userLat != null ? 6 : 2} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         {userLat != null && userLon != null && <Marker position={[userLat, userLon]} />}
         {track?.points && (
