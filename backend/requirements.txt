@@ -5,3 +5,5 @@ numpy
 pydantic
 python-dotenv
 timezonefinder
+sqlalchemy
+psycopg2-binary
