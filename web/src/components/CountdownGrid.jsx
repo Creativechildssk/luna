@@ -6,24 +6,34 @@ export default function CountdownGrid({ data, fmtTime }) {
   const setCountdown = useCountdown(data?.minutes_until_set);
   const bestCountdown = useCountdown(data?.minutes_until_best);
 
+  const loading = !data;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <StatCard
         label="Next Rise"
         value={riseCountdown ?? data?.rises_in}
         sub={fmtTime(data?.next_moonrise_local || data?.next_rise_local)}
+        loading={loading}
       />
       <StatCard
         label="Next Set"
         value={setCountdown ?? data?.sets_in}
         sub={fmtTime(data?.next_moonset_local || data?.next_set_local)}
+        loading={loading}
       />
       <StatCard
         label="Best View"
         value={bestCountdown ?? formatMinutes(data?.minutes_until_best)}
         sub={fmtTime(data?.best_observation_time_local)}
+        loading={loading}
       />
-      <StatCard label="Duration" value={formatDuration(data?.visible_duration_minutes)} sub="Visibility window" />
+      <StatCard
+        label="Duration"
+        value={formatDuration(data?.visible_duration_minutes)}
+        sub="Visibility window"
+        loading={loading}
+      />
     </div>
   );
 }
