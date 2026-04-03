@@ -268,5 +268,6 @@ def get_planet_window(body: str, lat: float, lon: float, search_days: int = 7):
             "direction_label": pos["direction_label"],
             "altitude": pos["altitude"],
             "elevation_state": "above_horizon" if pos["altitude"] > 0 else "below_horizon",
+            "distance_km": pos.get("distance_km"),
         },
     }

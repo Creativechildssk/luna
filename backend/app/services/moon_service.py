@@ -360,6 +360,7 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
             "direction": vis["direction"],
             "altitude": vis["altitude"],
             "elevation_state": vis["elevation_state"],
+            "distance_km": vis.get("distance_km"),
         },
     }
 
