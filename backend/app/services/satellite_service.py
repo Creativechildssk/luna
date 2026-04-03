@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+import urllib.request
 
-from skyfield.api import Loader, Topos
+from skyfield.api import Loader, Topos, EarthSatellite
 
 from app.utils.direction import get_direction, get_direction_verbose
 from app.utils.time_local import to_local_time
@@ -66,7 +67,6 @@ def load_tle(force: bool = False):
 
     if not TLE_FILE.exists():
         # fallback to built-in ISS if file missing
-        from skyfield.api import EarthSatellite
         iss_tle = (
             "ISS (ZARYA)",
             "1 25544U 98067A   24157.55059028  .00008361  00000+0  15486-3 0  9994",
@@ -105,11 +105,42 @@ def _get_sat(identifier: str):
         if len(matches) == 1:
             sat = matches[0]
     if sat is None:
+        # try remote fetch if numeric NORAD
+        sat = _fetch_and_cache_tle(ident)
+    if sat is None:
         available = sorted({k for k in sats.keys() if not k.isdigit()})
         raise ValueError(
             "Satellite not found; use name or NORAD ID present in satellites.tle. "
             f"Available names include: {', '.join(available[:10])}"
         )
+    return sat
+
+
+def _fetch_and_cache_tle(identifier: str):
+    """Fetch TLE from CelesTrak by NORAD ID and cache it."""
+    if not identifier.isdigit():
+        return None
+    url = f"https://celestrak.org/NORAD/elements/gp.php?CATNR={identifier}&FORMAT=TLE"
+    try:
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            text = resp.read().decode('utf-8', errors='ignore').strip()
+    except Exception:
+        return None
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if len(lines) < 3:
+        return None
+    name, l1, l2 = lines[0], lines[1], lines[2]
+    sat = EarthSatellite(l1, l2, name, ts)
+    # cache in memory
+    load_tle(force=True)
+    _tle_cache[name.upper().strip()] = sat
+    _tle_cache[str(sat.model.satnum)] = sat
+    # append to local TLE file
+    try:
+        with open(TLE_FILE, "a", encoding="utf-8") as f:
+            f.write(f"{name}\n{l1}\n{l2}\n")
+    except Exception:
+        pass
     return sat
 
 
