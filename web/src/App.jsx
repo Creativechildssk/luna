@@ -12,6 +12,7 @@ import SelectionBar from './components/SelectionBar';
 import SatelliteList from './components/SatelliteList';
 import ErrorBanner from './components/ErrorBanner';
 import QualityCard from './components/QualityCard';
+import ARQuickView from './components/ARQuickView';
 
 export default function App() {
   const [lat, setLat] = useState(null);
@@ -21,6 +22,7 @@ export default function App() {
   const [view, setView] = useState('moon'); // moon | planet | satellite
   const [satRange, setSatRange] = useState('today'); // today|tomorrow|week|month
   const [satSearch, setSatSearch] = useState('');
+  const [showAR, setShowAR] = useState(false);
 
   const moon = useQuery({
     queryKey: ['moon', lat, lon],
@@ -170,6 +172,14 @@ export default function App() {
           <div className="text-sm text-muted">
             Distance {summary.distance_km ? `${Math.round(summary.distance_km)} km` : '—'}
           </div>
+          {summary.azimuth != null && (
+            <button
+              className="mt-2 text-xs px-3 py-1 rounded-lg border border-border inline-flex items-center gap-1"
+              onClick={() => setShowAR(true)}
+            >
+              📷 AR view
+            </button>
+          )}
         </div>
 
         <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase || view} />
@@ -288,6 +298,14 @@ export default function App() {
           Open-Meteo weather
         </span>
       </footer>
+
+      {showAR && (
+        <ARQuickView
+          azimuth={summary.azimuth}
+          altitude={summary.altitude}
+          onClose={() => setShowAR(false)}
+        />
+      )}
     </div>
   );
 }
