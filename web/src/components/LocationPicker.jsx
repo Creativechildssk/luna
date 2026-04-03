@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from "react";
 
 export default function LocationPicker({ onChange }) {
-  const [lat, setLat] = useState('');
-  const [lon, setLon] = useState('');
+  const [lat, setLat] = useState("");
+  const [lon, setLon] = useState("");
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState("");
 
-  const isSecure =
-    typeof window !== 'undefined' &&
-    (window.isSecureContext || window.location.hostname === 'localhost');
+  const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.hostname === "localhost");
 
   useEffect(() => {
     if (!isSecure || !navigator.geolocation) return;
@@ -20,7 +18,7 @@ export default function LocationPicker({ onChange }) {
         setLon(longitude.toFixed(6));
         onChange(latitude, longitude);
         setBusy(false);
-        setMsg('Auto-detected from browser');
+        setMsg("Auto-detected from browser");
       },
       (err) => {
         setBusy(false);
@@ -32,11 +30,11 @@ export default function LocationPicker({ onChange }) {
 
   useEffect(() => {
     if (!isSecure) {
-      setMsg('Browser blocks geolocation on insecure HTTP. Use https or enter lat/lon manually.');
+      setMsg("Browser blocks geolocation on insecure HTTP. Use https or enter lat/lon manually.");
     }
   }, [isSecure]);
 
-  const canUseGeo = useMemo(() => isSecure && typeof navigator !== 'undefined' && !!navigator.geolocation, [isSecure]);
+  const canUseGeo = useMemo(() => isSecure && typeof navigator !== "undefined" && !!navigator.geolocation, [isSecure]);
 
   return (
     <div className="card p-4 space-y-3">
@@ -62,23 +60,24 @@ export default function LocationPicker({ onChange }) {
           />
         </label>
       </div>
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         <button
-          className="px-4 py-2 rounded-lg bg-accent text-slate-900 font-semibold"
+          className="px-4 py-2 rounded-lg bg-accent text-slate-900 font-semibold inline-flex items-center gap-2"
           onClick={() => {
             const la = parseFloat(lat);
             const lo = parseFloat(lon);
             if (Number.isFinite(la) && Number.isFinite(lo)) onChange(la, lo);
           }}
           disabled={!lat || !lon}
+          title="Apply typed coordinates"
         >
-          Use location
+          ?? Apply
         </button>
         <button
-          className="px-4 py-2 rounded-lg border border-border"
+          className="px-3 py-2 rounded-lg border border-border inline-flex items-center gap-2"
           onClick={() => {
             if (!canUseGeo) {
-              setMsg('Geolocation not available in this context.');
+              setMsg("Geolocation not available in this context.");
               return;
             }
             setBusy(true);
@@ -89,7 +88,7 @@ export default function LocationPicker({ onChange }) {
                 setLon(longitude.toFixed(6));
                 onChange(latitude, longitude);
                 setBusy(false);
-                setMsg('Refreshed from browser');
+                setMsg("Refreshed from browser");
               },
               (err) => {
                 setMsg(err.message);
@@ -99,8 +98,9 @@ export default function LocationPicker({ onChange }) {
             );
           }}
           disabled={busy || !canUseGeo}
+          title={canUseGeo ? "Use browser location" : "Geolocation blocked on HTTP"}
         >
-          {busy ? 'Locating...' : 'Locate me'}
+          {busy ? "? Locating…" : "?? Locate"}
         </button>
       </div>
       {msg && <div className="text-sm text-muted">{msg}</div>}
