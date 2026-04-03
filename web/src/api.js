@@ -1,7 +1,18 @@
-const base = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+const baseEnv = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+
+function buildUrl(path) {
+  // Allow both absolute bases (http...) and relative ("/api").
+  if (baseEnv.startsWith('http')) {
+    return new URL(path, baseEnv);
+  }
+  // Relative base: resolve against current origin.
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const base = origin + baseEnv.replace(/\/$/, '') + '/';
+  return new URL(path.replace(/^\//, ''), base);
+}
 
 async function fetchJson(path, params) {
-  const url = new URL(base + path);
+  const url = buildUrl(path);
   if (params) {
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
