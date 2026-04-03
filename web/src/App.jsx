@@ -122,7 +122,7 @@ export default function App() {
       />
 
       {(view === 'planet' || view === 'satellite') && (
-        <SelectionBar planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
+        <SelectionBar view={view} planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
