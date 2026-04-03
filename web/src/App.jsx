@@ -233,7 +233,7 @@ export default function App() {
             </div>
             <div className="card p-4 space-y-2">
               <div className="text-sm text-muted">Alerts</div>
-              {alerts.isLoading && <div className="text-sm text-muted">Loadingâ€¦</div>}
+              {alerts.isLoading && <div className="text-sm text-muted">Loading…</div>}
               {!alerts.isLoading && (!alerts.data || alerts.data.length === 0) && (
                 <div className="text-sm text-muted">None</div>
               )}
@@ -279,7 +279,23 @@ export default function App() {
         </div>
       )}
 
-      {loading && <div className="text-sm text-muted">Loadingâ€¦</div>}
+      {loading && <div className="text-sm text-muted">Loading…</div>}
+      <footer className="text-sm text-muted pt-4 border-t border-border flex flex-wrap items-center gap-2">
+        <span className="inline-flex items-center gap-1">
+          <span role="img" aria-label="moon">??</span>
+          LUNA v1.0.0
+        </span>
+        <span className="text-muted">•</span>
+        <span className="inline-flex items-center gap-1">
+          <span role="img" aria-label="rocket">??</span>
+          Powered by WFd DeepTech Labs
+        </span>
+        <span className="text-muted">•</span>
+        <span className="inline-flex items-center gap-1">
+          <span role="img" aria-label="cloud">??</span>
+          Open-Meteo weather
+        </span>
+      </footer>
     </div>
   );
 }
@@ -351,4 +367,6 @@ function fmtDeg(val) {
   if (val === null || val === undefined) return '—';
   return `${val}\u00b0`;
 }
+
+
 
