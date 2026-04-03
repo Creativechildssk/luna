@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+ï»¿import { useEffect, useMemo, useState } from "react";
 
 export default function LocationPicker({ onChange }) {
   const [lat, setLat] = useState("");
@@ -38,7 +38,7 @@ export default function LocationPicker({ onChange }) {
 
   return (
     <div className="card p-4 space-y-3">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto_auto] gap-3 items-end">
         <label className="space-y-1">
           <span className="text-sm text-muted">Latitude</span>
           <input
@@ -62,7 +62,7 @@ export default function LocationPicker({ onChange }) {
       </div>
       <div className="flex gap-2 flex-wrap items-center">
         <button
-          className="px-4 py-2 rounded-lg bg-accent text-slate-900 font-semibold inline-flex items-center gap-2"
+          className="px-4 py-2 rounded-lg bg-accent text-slate-900 font-semibold inline-flex items-center gap-2 md:mt-6"
           onClick={() => {
             const la = parseFloat(lat);
             const lo = parseFloat(lon);
@@ -74,7 +74,7 @@ export default function LocationPicker({ onChange }) {
           ?? Apply
         </button>
         <button
-          className="px-3 py-2 rounded-lg border border-border inline-flex items-center gap-2"
+          className="px-3 py-2 rounded-lg border border-border inline-flex items-center gap-2 md:mt-6"
           onClick={() => {
             if (!canUseGeo) {
               setMsg("Geolocation not available in this context.");
@@ -100,10 +100,11 @@ export default function LocationPicker({ onChange }) {
           disabled={busy || !canUseGeo}
           title={canUseGeo ? "Use browser location" : "Geolocation blocked on HTTP"}
         >
-          {busy ? "? Locating…" : "?? Locate"}
+          {busy ? "? Locatingï¿½" : "?? Locate"}
         </button>
       </div>
       {msg && <div className="text-sm text-muted">{msg}</div>}
     </div>
   );
 }
+
