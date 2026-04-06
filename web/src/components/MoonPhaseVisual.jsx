@@ -6,7 +6,7 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "" }) {
 
   return (
     <div className="card p-5 flex items-center gap-6">
-      <div className="relative w-32 h-32">
+      <div className="relative w-36 h-36">
         <div className="absolute inset-0 rounded-full bg-slate-900" />
         <motion.div
           key={`${percent}-${isWaxing}`}
@@ -28,3 +28,4 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "" }) {
     </div>
   );
 }
+

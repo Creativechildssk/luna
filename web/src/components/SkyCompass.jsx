@@ -7,8 +7,8 @@
   return (
     <div className="card p-5 flex items-center gap-6">
       <div className="text-sm text-muted w-24">Direction</div>
-      <svg viewBox="0 0 100 100" className="w-32 h-32">
-        <circle cx="50" cy="50" r="42" fill="none" stroke="#3b4252" strokeWidth="2" />
+      <svg viewBox="0 0 100 100" className="w-36 h-36">
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#3b4252" strokeWidth="2" />
         <text x="50" y="10" textAnchor="middle" fontSize="8" fill="#8899a6">N</text>
         <text x="50" y="99" textAnchor="middle" fontSize="8" fill="#8899a6">S</text>
         <text x="6" y="55" textAnchor="start" fontSize="8" fill="#8899a6">W</text>
@@ -25,3 +25,4 @@
     </div>
   );
 }
+
