@@ -12,6 +12,16 @@ body {
   @apply bg-card border border-border rounded-xl shadow-xl;
 }
 
+/* Desktop breathing room */
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .metric-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 /* Mobile tweaks */
 @media (max-width: 768px) {
   .dashboard {

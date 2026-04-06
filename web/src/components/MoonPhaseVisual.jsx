@@ -5,7 +5,7 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "" }) {
   const isWaxing = phase_hint.toLowerCase().includes("waxing");
 
   return (
-    <div className="card p-4 flex items-center gap-5">
+    <div className="card p-5 flex items-center gap-6">
       <div className="relative w-32 h-32">
         <div className="absolute inset-0 rounded-full bg-slate-900" />
         <motion.div

@@ -162,7 +162,7 @@ export default function App() {
         <SelectionBar view={view} planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 stats-grid">
+      <div className="grid grid-cols-1 md:grid-cols-5 stats-grid gap-3 stats-grid">
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Visibility</div>
           <div className="text-lg font-semibold">{summary.visible ? 'Visible now' : 'Below horizon'}</div>
@@ -200,7 +200,7 @@ export default function App() {
 
       {view === 'satellite' ? (
         <>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 metric-grid">
             <div className="lg:col-span-2">
               <SkyMap position={activeData?.position} track={satTrack.data} userLat={lat} userLon={lon} />
             </div>
@@ -213,7 +213,7 @@ export default function App() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 metric-grid items-start">
             <div className="lg:col-span-2 space-y-2">
               <div className="card p-3 flex flex-wrap gap-3 items-center">
                 <input
@@ -370,4 +370,5 @@ function fmtDeg(val) {
   if (val === null || val === undefined) return '—';
   return `${val}°`;
 }
+
 
