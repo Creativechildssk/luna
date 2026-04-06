@@ -29,6 +29,22 @@ function toInputDateTime(value) {
 }
 
 
+function formatLocalDateTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString();
+}
+
+
+function formatUtcDateTime(value) {
+  if (!value) return '—';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toISOString().replace('T', ' ').replace('.000Z', ' UTC');
+}
+
+
 function fromMission(mission) {
   if (!mission) return emptyMission;
   return {
@@ -188,6 +204,12 @@ export default function MissionPanel() {
               <div className="font-semibold">{mission.name}</div>
               <div className="text-sm text-muted">{mission.status} {mission.vehicle_name ? `• ${mission.vehicle_name}` : ''}</div>
               <div className="text-xs text-muted">{mission.tracking_identifier || 'No tracking linked'}</div>
+              {mission.launch_datetime && (
+                <div className="mt-2 text-xs text-muted">
+                  <div>Local: {formatLocalDateTime(mission.launch_datetime)}</div>
+                  <div>UTC: {formatUtcDateTime(mission.launch_datetime)}</div>
+                </div>
+              )}
             </button>
           ))}
           {!missions.isLoading && !missions.data?.length && <div className="text-sm text-muted">No missions yet.</div>}
@@ -252,8 +274,15 @@ export default function MissionPanel() {
           </label>
 
           <div className="text-xs text-muted">
-            Launch time is converted and stored in UTC before sending to the backend.
+            Launch time is converted and stored in UTC. Cards show both your local timezone and UTC.
           </div>
+
+          {selectedMission?.launch_datetime && (
+            <div className="rounded-lg border border-border bg-[#0f1620] px-3 py-2 text-xs text-muted space-y-1">
+              <div>Saved launch (Local): {formatLocalDateTime(selectedMission.launch_datetime)}</div>
+              <div>Saved launch (UTC): {formatUtcDateTime(selectedMission.launch_datetime)}</div>
+            </div>
+          )}
 
           <label className="inline-flex items-center gap-2 text-sm text-muted">
             <input type="checkbox" checked={form.active} onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))} />
