@@ -14,7 +14,7 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "" }) {
           style={{
             clipPath: `inset(0% ${isWaxing ? 100 - percent : 0}% 0% ${isWaxing ? 0 : 100 - percent}%)`,
             opacity: 0.9,
-          }
+          }}
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 0.9 }}
           transition={{ duration: 0.6 }}
