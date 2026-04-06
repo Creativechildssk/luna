@@ -125,10 +125,12 @@ export default function MissionPanel() {
     setForm(fromMission(nextMission));
   }, [missions.data, selectedMissionId]);
 
+  const selectedMission = missions.data?.find((mission) => mission.id === selectedMissionId) || null;
+
   const track = useQuery({
-    queryKey: ['missionTrack', selectedMissionId],
+    queryKey: ['missionTrack', selectedMissionId, selectedMission?.tracking_identifier],
     queryFn: () => api.missionTrack(selectedMissionId, 1, 60),
-    enabled: selectedMissionId !== null,
+    enabled: selectedMissionId !== null && !!selectedMission?.tracking_identifier,
     staleTime: 60_000,
   });
 
@@ -164,7 +166,6 @@ export default function MissionPanel() {
     onError: (error) => setFormError(error.message),
   });
 
-  const selectedMission = missions.data?.find((mission) => mission.id === selectedMissionId) || null;
   const currentTrack = track.data?.tracking?.current;
 
   return (
