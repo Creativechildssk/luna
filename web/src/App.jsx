@@ -13,6 +13,7 @@ import SatelliteList from './components/SatelliteList';
 import ErrorBanner from './components/ErrorBanner';
 import QualityCard from './components/QualityCard';
 import ARQuickView from './components/ARQuickView';
+import StatusDot from './components/StatusDot';
 
 export default function App() {
   const [lat, setLat] = useState(null);
@@ -80,6 +81,14 @@ export default function App() {
     staleTime: 60_000,
   });
 
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8000';
+  const backendStatus = activeError ? 'error' : loading ? 'loading' : 'ok';
+  const statusTooltip = activeError
+    ? `Backend error: ${activeError.message}`
+    : loading
+    ? 'Contacting backend…'
+    : `Backend OK (${apiBase})`;
+
   const filteredSatList =
     view === 'satellite' && satList.data
       ? satList.data.filter((s) => s.satellite.toLowerCase().includes(satSearch.toLowerCase()))
@@ -123,7 +132,7 @@ export default function App() {
           <h1 className="text-2xl font-bold">Sky Window</h1>
           <div className="text-sm text-muted">Moon · planets · satellites · visibility and best time to look</div>
         </div>
-        <div className="text-sm text-muted">API: {import.meta.env.VITE_API_BASE || 'http://localhost:8000'}</div>
+        <StatusDot status={backendStatus} label="API" message={statusTooltip} />
       </header>
 
       <div className="card p-2">
