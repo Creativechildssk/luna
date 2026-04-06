@@ -43,6 +43,7 @@ class MissionPayload(BaseModel):
 
 
 @router.get("/", response_model=list[dict])
+@router.get("", response_model=list[dict], include_in_schema=False)
 def mission_list(
 	include_inactive: bool = Query(False, description="Include inactive missions"),
 	db: Session = Depends(get_db),
