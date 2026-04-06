@@ -68,7 +68,7 @@ function formatSeconds(secs) {
 }
 
 function formatMinutes(mins) {
-  if (mins === null || mins === undefined) return "—";
+  if (mins === null || mins === undefined) return "â€”";
   const sign = mins < 0 ? "-" : "";
   const abs = Math.abs(mins);
   const h = Math.floor(abs / 60);
@@ -77,7 +77,7 @@ function formatMinutes(mins) {
 }
 
 function formatDuration(mins) {
-  if (!mins && mins !== 0) return "—";
+  if (!mins && mins !== 0) return "â€”";
   const h = Math.floor(mins / 60);
   const m = mins % 60;
   return h ? `${h}h ${m}m` : `${m}m`;

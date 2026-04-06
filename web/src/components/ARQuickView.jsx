@@ -3,11 +3,16 @@
 export default function ARQuickView({ azimuth, altitude, onClose }) {
   const [heading, setHeading] = useState(null);
   const [supportMsg, setSupportMsg] = useState("");
+  const [orientationEnabled, setOrientationEnabled] = useState(false);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
 
   useEffect(() => {
     async function startCam() {
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        setSupportMsg("Camera API is not available in this browser.");
+        return;
+      }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
         streamRef.current = stream;
@@ -24,7 +29,33 @@ export default function ARQuickView({ azimuth, altitude, onClose }) {
     };
   }, []);
 
+  async function enableOrientation() {
+    try {
+      if (typeof window === "undefined" || typeof window.DeviceOrientationEvent === "undefined") {
+        setSupportMsg("Device orientation is not available in this browser.");
+        return;
+      }
+
+      if (typeof window.DeviceOrientationEvent.requestPermission === "function") {
+        const permission = await window.DeviceOrientationEvent.requestPermission();
+        if (permission !== "granted") {
+          setSupportMsg("Compass permission was denied.");
+          return;
+        }
+      }
+
+      setOrientationEnabled(true);
+      setSupportMsg("");
+    } catch (e) {
+      setSupportMsg("Compass unavailable: " + e.message);
+    }
+  }
+
   useEffect(() => {
+    if (!orientationEnabled) {
+      return undefined;
+    }
+
     function handleOrient(e) {
       if (e.absolute === false && typeof e.webkitCompassHeading === "number") {
         setHeading(e.webkitCompassHeading);
@@ -52,6 +83,11 @@ export default function ARQuickView({ azimuth, altitude, onClose }) {
           <div className="text-sm mt-1">{altText}</div>
         </div>
         <div className="absolute top-2 right-2 flex gap-2 pointer-events-auto">
+          {!orientationEnabled && (
+            <button className="px-3 py-1 rounded-lg bg-slate-900/80 text-white border border-border" onClick={enableOrientation}>
+              Enable compass
+            </button>
+          )}
           <button className="px-3 py-1 rounded-lg bg-slate-900/80 text-white border border-border" onClick={onClose}>Close</button>
         </div>
         {supportMsg && <div className="p-3 text-sm text-red-200">{supportMsg}</div>}

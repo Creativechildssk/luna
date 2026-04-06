@@ -14,6 +14,12 @@ import ErrorBanner from './components/ErrorBanner';
 import QualityCard from './components/QualityCard';
 import ARQuickView from './components/ARQuickView';
 import StatusDot from './components/StatusDot';
+import MissionPanel from './components/MissionPanel';
+
+
+function hasCoordinates(lat, lon) {
+  return lat !== null && lat !== undefined && lon !== null && lon !== undefined;
+}
 
 export default function App() {
   const [lat, setLat] = useState(null);
@@ -34,13 +40,13 @@ export default function App() {
   const planetQ = useQuery({
     queryKey: ['planet', planet, lat, lon],
     queryFn: () => api.planetWindow(planet, lat, lon),
-    enabled: !!lat && !!lon && !!planet,
+    enabled: hasCoordinates(lat, lon) && !!planet,
     staleTime: 30_000,
   });
   const satQ = useQuery({
     queryKey: ['sat', sat, lat, lon],
     queryFn: () => api.satelliteWindow(sat, lat, lon, 24),
-    enabled: !!lat && !!lon && !!sat,
+    enabled: hasCoordinates(lat, lon) && !!sat,
     staleTime: 30_000,
   });
   const satList = useQuery({
@@ -51,7 +57,7 @@ export default function App() {
       satRange === 'today' ? 24 : satRange === 'tomorrow' ? 48 : satRange === 'week' ? 168 : 720,
       10
     ),
-    enabled: !!lat && !!lon && view === 'satellite',
+    enabled: hasCoordinates(lat, lon) && view === 'satellite',
     staleTime: 60_000,
   });
   const satTrack = useQuery({
@@ -63,13 +69,13 @@ export default function App() {
   const weather = useQuery({
     queryKey: ['weather', lat, lon],
     queryFn: () => api.weather(lat, lon),
-    enabled: !!lat && !!lon,
+    enabled: hasCoordinates(lat, lon),
     staleTime: 15 * 60_000,
   });
 
-  const activeData = view === 'moon' ? moon.data : view === 'planet' ? planetQ.data : satQ.data;
-  const activeError = view === 'moon' ? moon.error : view === 'planet' ? planetQ.error : satQ.error;
-  const activeRetry = view === 'moon' ? moon.refetch : view === 'planet' ? planetQ.refetch : satQ.refetch;
+  const activeData = view === 'moon' ? moon.data : view === 'planet' ? planetQ.data : view === 'satellite' ? satQ.data : null;
+  const activeError = view === 'moon' ? moon.error : view === 'planet' ? planetQ.error : view === 'satellite' ? satQ.error : null;
+  const activeRetry = view === 'moon' ? moon.refetch : view === 'planet' ? planetQ.refetch : view === 'satellite' ? satQ.refetch : null;
   const loading =
     (view === 'moon' && (moon.isLoading || moon.isFetching)) ||
     (view === 'planet' && planetQ.isLoading) ||
@@ -141,6 +147,7 @@ export default function App() {
             { key: 'moon', label: 'Moon' },
             { key: 'planet', label: 'Planets' },
             { key: 'satellite', label: 'Satellites' },
+            { key: 'mission', label: 'Missions' },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -160,17 +167,23 @@ export default function App() {
         <ErrorBanner message={`Satellites list error: ${satList.error.message}`} onRetry={satList.refetch} />
       )}
 
-      <LocationPicker
-        onChange={(la, lo) => {
-          setLat(la);
-          setLon(lo);
-        }}
-      />
+      {view !== 'mission' && (
+        <LocationPicker
+          onChange={(la, lo) => {
+            setLat(la);
+            setLon(lo);
+          }}
+        />
+      )}
 
       {(view === 'planet' || view === 'satellite') && (
         <SelectionBar view={view} planet={planet} onPlanetChange={setPlanet} sat={sat} onSatChange={setSat} />
       )}
 
+      {view === 'mission' && <MissionPanel />}
+
+      {view !== 'mission' && (
+      <>
       <div className="grid grid-cols-1 md:grid-cols-5 stats-grid gap-3 stats-grid">
         <div className="card p-4 space-y-2">
           <div className="text-sm text-muted">Visibility</div>
@@ -290,6 +303,8 @@ export default function App() {
       )}
 
       {loading && <div className="text-sm text-muted">Loading…</div>}
+      </>
+      )}
 
       <footer className="text-sm text-muted pt-4 border-t border-border flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1">
@@ -308,7 +323,7 @@ export default function App() {
         </span>
       </footer>
 
-      {showAR && (
+      {showAR && view !== 'mission' && (
         <ARQuickView
           azimuth={summary.azimuth}
           altitude={summary.altitude}
@@ -358,9 +373,13 @@ function computeQuality(data, weather) {
 
 function extractCurrentCloudCover(weather) {
   try {
+    if (weather?.current && typeof weather.current.cloud_cover === 'number') {
+      return weather.current.cloud_cover;
+    }
     if (weather?.current_weather && typeof weather.current_weather.cloudcover === 'number') {
       return weather.current_weather.cloudcover;
     }
+    if (weather?.hourly?.cloud_cover?.length) return weather.hourly.cloud_cover[0];
     if (weather?.hourly?.cloudcover?.length) return weather.hourly.cloudcover[0];
   } catch (e) {
     return null;

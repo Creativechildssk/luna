@@ -256,18 +256,6 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
     minutes_until_best = None
     minutes_until_set = moon_set.get("minutes_until_set")
 
-    # short status
-    parts = []
-    if rise.get("visible_now"):
-        parts.append("Moon up now")
-    elif rise.get("rises_in"):
-        parts.append(f"Rises {rise.get('rises_in')}")
-    if moon_set.get("sets_in"):
-        parts.append(f"Sets {moon_set.get('sets_in')}")
-    if best_mid_local:
-        parts.append(f"Best ~{best_mid_local}")
-    status_message = "; ".join(parts)
-
     # visibility state enum
     minutes_until_rise = rise.get("minutes_until_rise")
     minutes_until_set = moon_set.get("minutes_until_set")
@@ -322,6 +310,17 @@ def get_moon_window(lat: float, lon: float, search_days: int = 7):
     best_mid_utc = _strip_microseconds(_to_utc_z(best_mid_utc)) if best_mid_utc else None
     best_mid_local = _strip_microseconds(to_local_time(best_mid_utc)) if best_mid_utc else None
     minutes_until_best = _minutes_until(best_mid_utc) if best_mid_utc else None
+
+    parts = []
+    if rise.get("visible_now"):
+        parts.append("Moon up now")
+    elif rise.get("rises_in"):
+        parts.append(f"Rises {rise.get('rises_in')}")
+    if moon_set.get("sets_in"):
+        parts.append(f"Sets {moon_set.get('sets_in')}")
+    if best_mid_local:
+        parts.append(f"Best ~{best_mid_local}")
+    status_message = "; ".join(parts)
 
     days_until_next_rise = None
     if minutes_until_rise is not None:

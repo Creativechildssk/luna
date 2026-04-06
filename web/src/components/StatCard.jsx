@@ -3,7 +3,7 @@ export default function StatCard({ label, value, sub, loading }) {
     <div className="card p-3">
       <div className="text-sm text-muted">{label}</div>
       <div className="text-xl font-semibold">
-        {loading ? <Skeleton width="70%" /> : value ?? "—"}
+        {loading ? <Skeleton width="70%" /> : value ?? "â€”"}
       </div>
       {sub && <div className="text-xs text-muted mt-1">{loading ? <Skeleton width="50%" /> : sub}</div>}
     </div>

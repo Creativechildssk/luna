@@ -18,6 +18,7 @@ _Docker files were removed; run locally or add your own containerization later._
 - Moon: `/moon/position`, `/moon/visibility`, `/moon/next-rise`, `/moon/next-set`, `/moon/window` (recommended)
 - Planet: `/planet/position`, `/planet/window`
 - Satellite: `/satellite/position`, `/satellite/window`, `/satellite/track`
+- Mission: `/mission` CRUD plus `/mission/{id}/track` for linked satellite missions
 
 All endpoints return UTC (`*_utc`, suffixed `Z`) and server-local (`*_local`) timestamps.
 
