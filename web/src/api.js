@@ -56,7 +56,7 @@ export const api = {
   satelliteVisible: (lat, lon, hours = 12, limit = 10) =>
     fetchJson('/satellite/visible', { lat, lon, hours, limit }),
   alerts: () => fetchJson('/alerts'),
-  missions: (include_inactive = false) => fetchJson('/mission', { include_inactive }),
+  missions: (include_inactive = false) => fetchJson('/mission/', { include_inactive }),
   missionCreate: (payload) => sendJson('/mission/', 'POST', payload),
   missionUpdate: (id, payload) => sendJson(`/mission/${id}`, 'PUT', payload),
   missionDelete: (id) => sendJson(`/mission/${id}`, 'DELETE'),
