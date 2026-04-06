@@ -18,20 +18,30 @@ async function fetchJson(path, params) {
       if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, v);
     });
   }
-  const res = await fetch(url.toString());
+  let res;
+  try {
+    res = await fetch(url.toString());
+  } catch (error) {
+    throw new Error(`Network error calling ${url.toString()}: ${error.message}`);
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   return res.json();
 }
 
 async function sendJson(path, method, body) {
   const url = buildUrl(path);
-  const res = await fetch(url.toString(), {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let res;
+  try {
+    res = await fetch(url.toString(), {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (error) {
+    throw new Error(`Network error calling ${url.toString()}: ${error.message}`);
+  }
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   return res.json();
 }

@@ -30,6 +30,8 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: /api
     container_name: luna-web
     expose:
       - "3000"

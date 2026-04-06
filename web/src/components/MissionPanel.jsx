@@ -12,6 +12,7 @@ const emptyMission = {
   status: 'planned',
   mission_type: 'crewed',
   launch_datetime: '',
+  launch_time_mode: 'local',
   vehicle_name: '',
   tracking_identifier: '',
   tracking_type: 'satellite',
@@ -37,11 +38,35 @@ function fromMission(mission) {
     status: mission.status || 'planned',
     mission_type: mission.mission_type || 'crewed',
     launch_datetime: toInputDateTime(mission.launch_datetime),
+    launch_time_mode: 'local',
     vehicle_name: mission.vehicle_name || '',
     tracking_identifier: mission.tracking_identifier || '',
     tracking_type: mission.tracking_type || 'satellite',
     active: mission.active ?? true,
   };
+}
+
+
+function toUtcIso(value, mode) {
+  if (!value) return null;
+
+  const [datePart, timePart] = value.split('T');
+  if (!datePart || !timePart) return null;
+
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
+  if ([year, month, day, hour, minute].some((part) => Number.isNaN(part))) return null;
+
+  if (mode === 'utc') {
+    return new Date(Date.UTC(year, month - 1, day, hour, minute, 0)).toISOString();
+  }
+
+  if (mode === 'ist') {
+    const utcMillis = Date.UTC(year, month - 1, day, hour, minute, 0) - (330 * 60 * 1000);
+    return new Date(utcMillis).toISOString();
+  }
+
+  return new Date(value).toISOString();
 }
 
 
@@ -51,7 +76,7 @@ function buildPayload(form) {
     slug: form.slug || null,
     description: form.description || null,
     mission_type: form.mission_type || null,
-    launch_datetime: form.launch_datetime ? new Date(form.launch_datetime).toISOString() : null,
+    launch_datetime: toUtcIso(form.launch_datetime, form.launch_time_mode),
     vehicle_name: form.vehicle_name || null,
     tracking_identifier: form.tracking_identifier || null,
     tracking_type: form.tracking_identifier ? (form.tracking_type || 'satellite') : null,
@@ -200,6 +225,14 @@ export default function MissionPanel() {
               <input className="w-full rounded-lg border border-border bg-[#0f1620] px-3 py-2" type="datetime-local" value={form.launch_datetime} onChange={(e) => setForm((prev) => ({ ...prev, launch_datetime: e.target.value }))} />
             </label>
             <label className="space-y-1">
+              <span className="text-sm text-muted">Launch time mode</span>
+              <select className="w-full rounded-lg border border-border bg-[#0f1620] px-3 py-2" value={form.launch_time_mode} onChange={(e) => setForm((prev) => ({ ...prev, launch_time_mode: e.target.value }))}>
+                <option value="local">Local (this browser)</option>
+                <option value="utc">UTC</option>
+                <option value="ist">IST (UTC+05:30)</option>
+              </select>
+            </label>
+            <label className="space-y-1">
               <span className="text-sm text-muted">Vehicle</span>
               <input className="w-full rounded-lg border border-border bg-[#0f1620] px-3 py-2" value={form.vehicle_name} onChange={(e) => setForm((prev) => ({ ...prev, vehicle_name: e.target.value }))} />
             </label>
@@ -217,6 +250,10 @@ export default function MissionPanel() {
             <span className="text-sm text-muted">Description</span>
             <textarea className="w-full min-h-28 rounded-lg border border-border bg-[#0f1620] px-3 py-2" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
           </label>
+
+          <div className="text-xs text-muted">
+            Launch time is converted and stored in UTC before sending to the backend.
+          </div>
 
           <label className="inline-flex items-center gap-2 text-sm text-muted">
             <input type="checkbox" checked={form.active} onChange={(e) => setForm((prev) => ({ ...prev, active: e.target.checked }))} />
