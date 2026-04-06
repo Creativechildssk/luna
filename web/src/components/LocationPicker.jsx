@@ -1,55 +1,18 @@
-﻿import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 export default function LocationPicker({ onChange }) {
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const autoTimer = useRef(null);
 
   const isSecure = typeof window !== "undefined" && (window.isSecureContext || window.location.hostname === "localhost");
-
-  useEffect(() => {
-    if (!isSecure || !navigator.geolocation) return;
-    setBusy(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude, longitude } = pos.coords;
-        setLat(latitude.toFixed(6));
-        setLon(longitude.toFixed(6));
-        onChange(latitude, longitude);
-        setBusy(false);
-        setMsg("Auto-detected from browser");
-      },
-      (err) => {
-        setBusy(false);
-        setMsg(err.message);
-      },
-      { enableHighAccuracy: true, timeout: 4000 }
-    );
-  }, [onChange, isSecure]);
 
   useEffect(() => {
     if (!isSecure) {
       setMsg("Browser blocks geolocation on insecure HTTP. Use https or enter lat/lon manually.");
     }
   }, [isSecure]);
-
-  // auto-apply typed coords with debounce
-  useEffect(() => {
-    if (autoTimer.current) clearTimeout(autoTimer.current);
-    const la = parseFloat(lat);
-    const lo = parseFloat(lon);
-    if (Number.isFinite(la) && Number.isFinite(lo)) {
-      autoTimer.current = setTimeout(() => {
-        onChange(la, lo);
-        setMsg("Applied typed coordinates");
-      }, 600);
-    }
-    return () => {
-      if (autoTimer.current) clearTimeout(autoTimer.current);
-    };
-  }, [lat, lon, onChange]);
 
   const canUseGeo = useMemo(() => isSecure && typeof navigator !== "undefined" && !!navigator.geolocation, [isSecure]);
 
