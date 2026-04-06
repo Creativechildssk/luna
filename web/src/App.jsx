@@ -116,7 +116,7 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-4 space-y-4 dashboard">
+    <div className="max-w-[1400px] mx-auto px-6 py-4 space-y-5 dashboard">
       <header className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <div className="text-xs text-muted uppercase tracking-wide">LUNA v1.0.0</div>
