@@ -49,6 +49,13 @@ export default function App() {
     enabled: hasCoordinates(lat, lon) && !!sat,
     staleTime: 30_000,
   });
+  const satTrackHours = useMemo(() => {
+    const minutesUntilRise = satQ.data?.minutes_until_rise;
+    if (satQ.data?.visible_now) return 2;
+    if (typeof minutesUntilRise !== 'number') return 2;
+    const projected = Math.ceil((minutesUntilRise + 120) / 60);
+    return Math.max(2, Math.min(6, projected));
+  }, [satQ.data]);
   const satList = useQuery({
     queryKey: ['satList', lat, lon, satRange],
     queryFn: () => api.satelliteVisible(
@@ -61,8 +68,8 @@ export default function App() {
     staleTime: 60_000,
   });
   const satTrack = useQuery({
-    queryKey: ['satTrack', sat],
-    queryFn: () => api.satelliteTrack(sat, 1, 60),
+    queryKey: ['satTrack', sat, satTrackHours],
+    queryFn: () => api.satelliteTrack(sat, satTrackHours, 60),
     enabled: !!sat,
     staleTime: 60_000,
   });
@@ -224,7 +231,17 @@ export default function App() {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 metric-grid">
             <div className="lg:col-span-2">
-              <SkyMap position={activeData?.position} track={satTrack.data} userLat={lat} userLon={lon} />
+              <SkyMap
+                position={activeData?.position}
+                track={satTrack.data}
+                userLat={lat}
+                userLon={lon}
+                passWindow={{
+                  visibleNow: activeData?.visible_now,
+                  nextRiseUtc: activeData?.next_rise_utc,
+                  nextSetUtc: activeData?.next_set_utc,
+                }}
+              />
             </div>
             <div className="card p-4 space-y-2">
               <div className="text-sm text-muted mb-1">Satellite data ({sat})</div>
