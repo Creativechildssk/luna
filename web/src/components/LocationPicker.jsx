@@ -1,5 +1,36 @@
 ﻿import { useEffect, useMemo, useState } from "react";
 
+function normalizeGeoError(err) {
+  if (!err) return "Unable to fetch location.";
+
+  // Safari can return opaque CoreLocation errors like kCLErrorDomain error 0.
+  if (String(err.message || "").includes("kCLErrorDomain")) {
+    return "Safari could not determine your position. Ensure Location Services are enabled for Safari and try again.";
+  }
+
+  if (err.code === 1) return "Location permission denied. Allow location access for this site in Safari settings.";
+  if (err.code === 2) return "Location unavailable. Check GPS/Wi-Fi and try again.";
+  if (err.code === 3) return "Location request timed out. Move to open sky and retry.";
+
+  return err.message || "Unable to fetch location.";
+}
+
+function requestCurrentPosition() {
+  const strictOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+  const relaxedOptions = { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 };
+
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      resolve,
+      () => {
+        // Retry once with relaxed options for Safari/CoreLocation flakiness.
+        navigator.geolocation.getCurrentPosition(resolve, reject, relaxedOptions);
+      },
+      strictOptions
+    );
+  });
+}
+
 export default function LocationPicker({ onChange }) {
   const [lat, setLat] = useState("");
   const [lon, setLon] = useState("");
@@ -53,27 +84,24 @@ export default function LocationPicker({ onChange }) {
         </button>
         <button
           className="px-3 py-2 rounded-lg border border-border inline-flex items-center gap-2 md:mt-6"
-          onClick={() => {
+          onClick={async () => {
             if (!canUseGeo) {
               setMsg("Geolocation not available in this context.");
               return;
             }
             setBusy(true);
-            navigator.geolocation.getCurrentPosition(
-              (pos) => {
-                const { latitude, longitude } = pos.coords;
-                setLat(latitude.toFixed(6));
-                setLon(longitude.toFixed(6));
-                onChange(latitude, longitude);
-                setBusy(false);
-                setMsg("Refreshed from browser");
-              },
-              (err) => {
-                setMsg(err.message);
-                setBusy(false);
-              },
-              { enableHighAccuracy: true, timeout: 5000 }
-            );
+            try {
+              const pos = await requestCurrentPosition();
+              const { latitude, longitude } = pos.coords;
+              setLat(latitude.toFixed(6));
+              setLon(longitude.toFixed(6));
+              onChange(latitude, longitude);
+              setMsg("Refreshed from browser");
+            } catch (err) {
+              setMsg(normalizeGeoError(err));
+            } finally {
+              setBusy(false);
+            }
           }}
           disabled={busy || !canUseGeo}
           title={canUseGeo ? "Use browser location" : "Geolocation blocked on HTTP"}
