@@ -344,6 +344,8 @@ export default function App() {
         <ARQuickView
           azimuth={summary.azimuth}
           altitude={summary.altitude}
+          targetLabel={view === 'satellite' ? sat : view === 'planet' ? planet : 'Moon'}
+          statusText={summary.status}
           onClose={() => setShowAR(false)}
         />
       )}
