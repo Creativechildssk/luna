@@ -10,23 +10,23 @@ function normalizeGeoError(err) {
 
   if (err.code === 1) return "Location permission denied. Allow location access for this site in Safari settings.";
   if (err.code === 2) return "Location unavailable. Check GPS/Wi-Fi and try again.";
-  if (err.code === 3) return "Location request timed out. Move to open sky and retry.";
+  if (err.code === 3) return "Location request timed out. Turn on Precise Location for Safari, keep Wi-Fi/mobile data on, and retry.";
 
   return err.message || "Unable to fetch location.";
 }
 
 function requestCurrentPosition() {
-  const strictOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
-  const relaxedOptions = { enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 };
+  const relaxedOptions = { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 };
+  const strictOptions = { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 };
 
   return new Promise((resolve, reject) => {
     navigator.geolocation.getCurrentPosition(
       resolve,
       () => {
-        // Retry once with relaxed options for Safari/CoreLocation flakiness.
-        navigator.geolocation.getCurrentPosition(resolve, reject, relaxedOptions);
+        // Retry once with strict GPS options if coarse lookup fails.
+        navigator.geolocation.getCurrentPosition(resolve, reject, strictOptions);
       },
-      strictOptions
+      relaxedOptions
     );
   });
 }
