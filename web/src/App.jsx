@@ -33,16 +33,23 @@ export default function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState(null);
   const [installSupported, setInstallSupported] = useState(false);
   const [installDismissed, setInstallDismissed] = useState(false);
+  const [iosInstallDismissed, setIosInstallDismissed] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
     }
 
+    const savedIosDismissed = window.localStorage.getItem('luna-ios-install-dismissed');
+    if (savedIosDismissed === '1') {
+      setIosInstallDismissed(true);
+    }
+
     const media = window.matchMedia?.('(display-mode: standalone)');
     const isStandalone = media?.matches || window.navigator.standalone === true;
     if (isStandalone) {
       setInstallDismissed(true);
+      setIosInstallDismissed(true);
     }
 
     function onBeforeInstallPrompt(event) {
@@ -176,6 +183,17 @@ export default function App() {
   const titleTone = apiConnected ? 'text-emerald-300' : 'text-amber-300';
   const titleStatus = apiConnected ? 'Connected' : 'Disconnected';
   const canInstall = !!installPromptEvent && installSupported && !installDismissed;
+  const isIosSafari = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const ua = window.navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua);
+    const isWebKit = /WebKit/.test(ua);
+    const isCriOS = /CriOS/.test(ua);
+    const isFxiOS = /FxiOS/.test(ua);
+    const isStandalone = window.navigator.standalone === true || window.matchMedia?.('(display-mode: standalone)')?.matches;
+    return isIOS && isWebKit && !isCriOS && !isFxiOS && !isStandalone;
+  }, []);
+  const showIosInstallBanner = isIosSafari && !iosInstallDismissed && !canInstall;
 
   async function handleInstallClick() {
     if (!installPromptEvent) return;
@@ -189,6 +207,13 @@ export default function App() {
 
     setInstallPromptEvent(null);
     setInstallSupported(false);
+  }
+
+  function dismissIosInstallBanner() {
+    setIosInstallDismissed(true);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('luna-ios-install-dismissed', '1');
+    }
   }
 
   return (
@@ -228,6 +253,21 @@ export default function App() {
               Not now
             </button>
           </div>
+        </div>
+      )}
+
+      {showIosInstallBanner && (
+        <div className="card p-3 flex flex-wrap items-center justify-between gap-3 border-amber-400/40 bg-amber-400/10">
+          <div>
+            <div className="text-sm font-semibold text-amber-100">Install LUNA on iPhone</div>
+            <div className="text-xs text-amber-100/90">In Safari tap Share, then choose Add to Home Screen.</div>
+          </div>
+          <button
+            className="px-3 py-2 rounded-lg border border-amber-300/60 text-sm text-amber-100"
+            onClick={dismissIosInstallBanner}
+          >
+            Dismiss
+          </button>
         </div>
       )}
 
