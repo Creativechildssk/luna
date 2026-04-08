@@ -9,6 +9,7 @@ import SkyMap from './components/SkyMap';
 import Timeline from './components/Timeline';
 import StatCard from './components/StatCard';
 import SelectionBar from './components/SelectionBar';
+import QuickSliderMenu from './components/QuickSliderMenu';
 import SatelliteList from './components/SatelliteList';
 import ErrorBanner from './components/ErrorBanner';
 import QualityCard from './components/QualityCard';
@@ -30,6 +31,37 @@ export default function App() {
   const [satRange, setSatRange] = useState('today'); // today|tomorrow|week|month
   const [satSearch, setSatSearch] = useState('');
   const [showAR, setShowAR] = useState(false);
+  const [quickTool, setQuickTool] = useState('live-identify');
+
+  const quickToolItems = useMemo(
+    () => [
+      {
+        key: 'live-identify',
+        label: 'Live Identify',
+        description: 'Match what the phone points at with live satellite predictions.',
+        badge: 'Active',
+      },
+      {
+        key: 'aircraft-radar',
+        label: 'Aircraft Radar',
+        description: 'Live flight overlays near your aim direction.',
+        badge: 'Soon',
+      },
+      {
+        key: 'meteor-watch',
+        label: 'Meteor Watch',
+        description: 'Identify likely meteor streaks and shower windows.',
+        badge: 'Soon',
+      },
+      {
+        key: 'deep-sky',
+        label: 'Deep Sky',
+        description: 'Galaxies, nebulae, and star clusters by camera direction.',
+        badge: 'Soon',
+      },
+    ],
+    []
+  );
   const [installPromptEvent, setInstallPromptEvent] = useState(null);
   const [installSupported, setInstallSupported] = useState(false);
   const [installDismissed, setInstallDismissed] = useState(false);
@@ -292,6 +324,8 @@ export default function App() {
         </div>
       </div>
 
+      <QuickSliderMenu items={quickToolItems} selectedKey={quickTool} onSelect={setQuickTool} />
+
       {activeError && <ErrorBanner message={`Failed to load data: ${activeError.message}`} onRetry={activeRetry} />}
       {view === 'satellite' && satList.error && (
         <ErrorBanner message={`Satellites list error: ${satList.error.message}`} onRetry={satList.refetch} />
@@ -469,6 +503,9 @@ export default function App() {
           altitude={summary.altitude}
           targetLabel={view === 'satellite' ? sat : view === 'planet' ? planet : 'Moon'}
           statusText={summary.status}
+          userLat={lat}
+          userLon={lon}
+          liveIdentifyEnabled={quickTool === 'live-identify'}
           onClose={() => setShowAR(false)}
         />
       )}

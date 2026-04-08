@@ -1,8 +1,10 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../api";
 
 const MAX_HISTORY = 12;
 
-export default function ARQuickView({ azimuth, altitude, targetLabel, statusText, onClose }) {
+export default function ARQuickView({ azimuth, altitude, targetLabel, statusText, userLat, userLon, liveIdentifyEnabled = true, onClose }) {
   const [heading, setHeading] = useState(null);
   const [pitch, setPitch] = useState(null);
   const [supportMsg, setSupportMsg] = useState("");
@@ -105,6 +107,45 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
   const confidenceTone = calibration.level === "good" ? "text-emerald-300" : calibration.level === "fair" ? "text-amber-200" : "text-red-200";
   const targetName = targetLabel || "Target";
   const statusLine = useMemo(() => compactStatus(statusText), [statusText]);
+  const liveSat = useQuery({
+    queryKey: ["arLiveIdentify", userLat, userLon],
+    queryFn: () => api.satelliteVisible(userLat, userLon, 6, 25),
+    enabled: liveIdentifyEnabled && typeof userLat === "number" && typeof userLon === "number",
+    refetchInterval: 6000,
+    staleTime: 5000,
+  });
+  const liveMatches = useMemo(() => {
+    if (!liveIdentifyEnabled) return [];
+    if (heading == null || pitch == null || !Array.isArray(liveSat.data)) return [];
+
+    const aimAz = normalize360(heading);
+    const aimAlt = pitch;
+
+    return liveSat.data
+      .filter((item) => item?.position && typeof item.position.azimuth === "number" && typeof item.position.altitude === "number")
+      .map((item) => {
+        const satAz = normalize360(item.position.azimuth);
+        const satAlt = item.position.altitude;
+        return {
+          name: item.satellite,
+          state: item.visibility_state,
+          visibleNow: item.visible_now,
+          angularDistance: angularDistanceDeg(aimAz, aimAlt, satAz, satAlt),
+        };
+      })
+      .sort((a, b) => a.angularDistance - b.angularDistance)
+      .slice(0, 3);
+  }, [heading, pitch, liveSat.data, liveIdentifyEnabled]);
+  const bestLiveMatch = liveMatches[0] || null;
+  const liveStatusText = !liveIdentifyEnabled
+    ? "Live identify is disabled in slider menu."
+    : liveSat.isLoading
+    ? "Scanning nearby satellites..."
+    : liveSat.error
+    ? "Live identify unavailable right now."
+    : bestLiveMatch && bestLiveMatch.angularDistance <= 8
+    ? `Likely ${bestLiveMatch.name} (${bestLiveMatch.angularDistance.toFixed(1)}° from aim)`
+    : "No close satellite match. Could be aircraft, meteor, or distant object.";
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
@@ -139,6 +180,9 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
               style={{ top: "max(12px, env(safe-area-inset-top))" }}
             >
               <div className="text-xs text-slate-200">{targetName} · {heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
+              {liveIdentifyEnabled && bestLiveMatch && (
+                <div className="text-[11px] text-slate-300 mt-0.5">Nearest: {bestLiveMatch.name} · {bestLiveMatch.angularDistance.toFixed(1)}°</div>
+              )}
             </div>
           )}
 
@@ -175,6 +219,18 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
               <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-slate-300">Calibration</div>
                 <div className={`text-sm font-medium leading-tight ${confidenceTone}`}>{calibration.text}</div>
+              </div>
+
+              <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2 sm:col-span-3">
+                <div className="text-[10px] uppercase tracking-wide text-slate-300">Live Identify</div>
+                <div className="text-sm font-medium text-slate-100 leading-tight">{liveStatusText}</div>
+                {liveIdentifyEnabled && liveMatches.length > 0 && (
+                  <div className="mt-1 text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
+                    {liveMatches.map((item) => (
+                      <span key={item.name}>{item.name}: {item.angularDistance.toFixed(1)}°</span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -276,4 +332,19 @@ function compactStatus(statusText) {
   const line = String(statusText).split(/\r?\n/).map((part) => part.trim()).filter(Boolean)[0] || "";
   if (!line) return "";
   return line.length > 92 ? `${line.slice(0, 89)}...` : line;
+}
+
+function angularDistanceDeg(az1, alt1, az2, alt2) {
+  const a1 = (az1 * Math.PI) / 180;
+  const e1 = (alt1 * Math.PI) / 180;
+  const a2 = (az2 * Math.PI) / 180;
+  const e2 = (alt2 * Math.PI) / 180;
+
+  const sin1 = Math.sin(e1);
+  const sin2 = Math.sin(e2);
+  const cos1 = Math.cos(e1);
+  const cos2 = Math.cos(e2);
+  const cosDeltaAz = Math.cos(a1 - a2);
+  const cosD = Math.max(-1, Math.min(1, sin1 * sin2 + cos1 * cos2 * cosDeltaAz));
+  return (Math.acos(cosD) * 180) / Math.PI;
 }
