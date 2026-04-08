@@ -1,0 +1,15 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="112" fill="#07111A"/>
+  <circle cx="256" cy="256" r="182" fill="url(#skyGlow)" fill-opacity="0.16"/>
+  <path d="M309.589 97.5C257.6 111.474 219 159.001 219 215.55C219 283.071 273.629 337.7 341.15 337.7C371.334 337.7 398.963 326.765 420.3 308.627C402.306 375.137 342.17 424 270.6 424C184.681 424 115 354.319 115 268.4C115 182.481 184.681 112.8 270.6 112.8C284.223 112.8 297.436 114.553 309.589 117.84V97.5Z" fill="#F8FAFC"/>
+  <circle cx="360" cy="162" r="22" fill="#7DD3FC"/>
+  <circle cx="175" cy="155" r="10" fill="#F59E0B"/>
+  <circle cx="136" cy="226" r="8" fill="#F8FAFC" fill-opacity="0.8"/>
+  <path d="M104 340C168.382 297.153 246.596 289.382 318.771 318.646C361.226 335.861 398.44 364.464 427 400" stroke="#38BDF8" stroke-width="26" stroke-linecap="round"/>
+  <defs>
+    <radialGradient id="skyGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 214) rotate(90) scale(224)">
+      <stop stop-color="#38BDF8"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>
