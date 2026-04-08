@@ -334,7 +334,7 @@ export default function App() {
           )}
         </div>
 
-        <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase || view} />
+        <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase || view} latitude={lat} />
 
         <SkyCompass azimuth={summary.azimuth} altitude={summary.altitude} direction={summary.direction} />
 

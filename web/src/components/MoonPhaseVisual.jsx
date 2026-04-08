@@ -1,10 +1,14 @@
 ﻿import { motion } from "framer-motion";
 
-export default function MoonPhaseVisual({ illumination = 0, phase_hint = "" }) {
+export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", latitude = null }) {
   const percent = Math.min(Math.max(illumination, 0), 100);
   const isWaxing = phase_hint.toLowerCase().includes("waxing");
+  const isSouthernHemisphere = typeof latitude === "number" && latitude < 0;
+  const hemisphereLabel = isSouthernHemisphere ? "Southern hemisphere" : "Northern hemisphere";
   const shadowWidth = Math.max(0, Math.min(100, 100 - percent));
-  const shadowSide = isWaxing ? "left" : "right";
+  const shadowSide = isWaxing
+    ? (isSouthernHemisphere ? "right" : "left")
+    : (isSouthernHemisphere ? "left" : "right");
 
   return (
     <div className="card p-5 flex items-center gap-6">
@@ -38,6 +42,7 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "" }) {
         <div className="text-lg text-muted">Phase</div>
         <div className="text-3xl font-semibold capitalize">{phase_hint || "—"}</div>
         <div className="text-lg text-muted">{percent.toFixed(1)}% illuminated</div>
+        <div className="text-xs text-muted">{hemisphereLabel}</div>
       </div>
     </div>
   );
