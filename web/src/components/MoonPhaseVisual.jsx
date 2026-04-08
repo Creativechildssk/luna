@@ -11,8 +11,8 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", lat
     : (isSouthernHemisphere ? "left" : "right");
 
   return (
-    <div className="card p-4 md:p-6 flex items-center justify-between gap-4 md:gap-8 overflow-hidden">
-      <div className="relative w-40 h-40 md:w-52 md:h-52 shrink-0">
+    <div className="card p-4 flex flex-col xl:flex-row items-center xl:items-start gap-4 min-h-[180px]">
+      <div className="relative w-28 h-28 md:w-32 md:h-32 shrink-0">
         <div className="absolute inset-0 rounded-full bg-[#151d28] shadow-[inset_0_0_40px_rgba(0,0,0,0.55)]" />
         <motion.div
           key={`${percent}-${isWaxing}`}
@@ -40,15 +40,15 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", lat
         <div className="absolute inset-0 rounded-full shadow-[0_0_60px_rgba(226,234,136,0.12)]" />
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="text-2xl md:text-3xl text-slate-300">Phase:</div>
-        <div className="mt-1 text-3xl md:text-5xl font-semibold leading-tight capitalize text-slate-100 break-words">
+      <div className="flex-1 min-w-0 text-center xl:text-left">
+        <div className="text-base md:text-lg text-slate-300">Phase:</div>
+        <div className="mt-1 text-2xl md:text-3xl font-semibold leading-tight capitalize text-slate-100 break-words">
           {phase_hint || "—"}
         </div>
-        <div className="mt-2 md:mt-3 text-6xl md:text-8xl leading-none font-semibold tracking-tight text-slate-300">
+        <div className="mt-2 text-4xl md:text-5xl leading-none font-semibold tracking-tight text-slate-300">
           {percent.toFixed(0)}%
         </div>
-        <div className="mt-1 text-2xl md:text-4xl text-slate-400">illuminated</div>
+        <div className="mt-1 text-lg md:text-xl text-slate-400">illuminated</div>
         <div className="mt-2 text-xs md:text-sm text-slate-500">{hemisphereLabel}</div>
       </div>
     </div>
