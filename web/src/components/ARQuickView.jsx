@@ -103,71 +103,89 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
   const reticle = useMemo(() => buildReticlePosition(deltaAz, deltaAlt), [deltaAz, deltaAlt]);
   const confidenceTone = calibration.level === "good" ? "text-emerald-300" : calibration.level === "fair" ? "text-amber-200" : "text-red-200";
   const targetName = targetLabel || "Target";
+  const statusLine = useMemo(() => compactStatus(statusText), [statusText]);
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-2xl rounded-2xl overflow-hidden border border-border bg-[#0f1620] shadow-2xl">
-        <video ref={videoRef} autoPlay playsInline muted className="w-full h-80 object-cover" />
-        {!cameraReady && <div className="absolute inset-0 bg-slate-950/70" />}
-        <div className="absolute inset-0 pointer-events-none text-white drop-shadow-lg">
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/80 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-slate-950/90 to-transparent" />
+    <div className="fixed inset-0 z-50 bg-black">
+      <div className="relative w-screen h-[100dvh] overflow-hidden bg-black text-white">
+        <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover" />
+        {!cameraReady && <div className="absolute inset-0 bg-slate-950/85" />}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-transparent to-black/70" />
 
-          <div className="absolute top-4 left-4 right-4 flex items-start justify-between gap-3">
-            <div className="rounded-xl bg-slate-950/60 border border-white/10 px-4 py-3 max-w-[70%]">
-              <div className="text-xs uppercase tracking-[0.2em] text-slate-300">AR Guide</div>
-              <div className="text-xl font-semibold">{targetName}</div>
-              <div className="text-sm text-slate-300">{statusText || "Use the reticle to line up with the target."}</div>
+        <div className="absolute inset-0 pointer-events-none">
+          <div
+            className="absolute left-3 right-3 md:left-6 md:right-6 flex items-start justify-between gap-3"
+            style={{ top: "max(12px, env(safe-area-inset-top))" }}
+          >
+            <div className="rounded-2xl bg-slate-950/62 border border-white/10 px-3 py-2 max-w-[76%]">
+              <div className="text-[10px] uppercase tracking-[0.22em] text-slate-300">AR Guide</div>
+              <div className="text-xl md:text-2xl font-semibold leading-tight">{targetName}</div>
+              <div className="text-xs md:text-sm text-slate-300 leading-snug">{statusLine || "Use the reticle to align with target."}</div>
             </div>
-            <div className="rounded-xl bg-slate-950/60 border border-white/10 px-3 py-2 text-right">
-              <div className="text-xs text-slate-300">Heading</div>
-              <div className="text-lg font-semibold">{heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
+
+            <div className="rounded-2xl bg-slate-950/62 border border-white/10 px-3 py-2 text-right min-w-[96px]">
+              <div className="text-[10px] uppercase tracking-wide text-slate-300">Heading</div>
+              <div className="text-lg font-semibold tabular-nums">{heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
               <div className={`text-xs ${confidenceTone}`}>Compass {calibration.level}</div>
             </div>
           </div>
 
           <div className="absolute inset-0 flex items-center justify-center">
             <div
-              className="absolute left-1/2 right-1/2 border-t border-dashed border-white/35"
-              style={{ transform: `translateY(${pitch != null ? Math.max(-90, Math.min(90, pitch)) * 1.6 : 0}px)` }}
+              className="absolute border-t border-dashed border-white/40 w-[56vw] md:w-[40vw] max-w-[360px]"
+              style={{ transform: `translateY(${pitch != null ? Math.max(-90, Math.min(90, pitch)) * 1.45 : 0}px)` }}
             />
-            <div className="absolute w-24 h-24 rounded-full border border-white/40" />
-            <div className="absolute w-3 h-3 rounded-full bg-white/70" />
-            <div className="absolute w-10 h-px bg-white/50" />
-            <div className="absolute w-px h-10 bg-white/50" />
+            <div className="absolute w-24 h-24 md:w-32 md:h-32 rounded-full border border-white/45" />
+            <div className="absolute w-3 h-3 rounded-full bg-white/80" />
+            <div className="absolute w-10 h-px bg-white/60" />
+            <div className="absolute w-px h-10 bg-white/60" />
             <div
-              className="absolute w-5 h-5 rounded-full border-2 border-[#f6ad55] bg-[#f6ad55]/15 shadow-[0_0_18px_rgba(246,173,85,0.75)]"
+              className="absolute w-5 h-5 rounded-full border-2 border-[#f6ad55] bg-[#f6ad55]/20 shadow-[0_0_20px_rgba(246,173,85,0.78)]"
               style={{ transform: `translate(${reticle.x}px, ${reticle.y}px)` }}
             />
           </div>
 
-          <div className="absolute bottom-4 left-4 right-4 grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="rounded-xl bg-slate-950/65 border border-white/10 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-slate-300">Horizontal</div>
-              <div className="text-lg font-semibold">{dirText || "Waiting for heading"}</div>
-              <div className="text-xs text-slate-400">Target azimuth {azimuth != null ? `${azimuth.toFixed(0)}°` : "—"}</div>
+          <div
+            className="absolute left-3 right-3 md:left-6 md:right-6 grid grid-cols-1 sm:grid-cols-3 gap-2"
+            style={{ bottom: "max(12px, env(safe-area-inset-bottom))" }}
+          >
+            <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wide text-slate-300">Horizontal</div>
+              <div className="text-base font-semibold leading-tight">{dirText || "Waiting for heading"}</div>
+              <div className="text-xs text-slate-400">Az {azimuth != null ? `${azimuth.toFixed(0)}°` : "—"}</div>
             </div>
-            <div className="rounded-xl bg-slate-950/65 border border-white/10 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-slate-300">Vertical</div>
-              <div className="text-lg font-semibold">{altText || "Waiting for tilt"}</div>
-              <div className="text-xs text-slate-400">Target altitude {altitude != null ? `${altitude.toFixed(0)}°` : "—"}</div>
+            <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wide text-slate-300">Vertical</div>
+              <div className="text-base font-semibold leading-tight">{altText || "Waiting for tilt"}</div>
+              <div className="text-xs text-slate-400">Alt {altitude != null ? `${altitude.toFixed(0)}°` : "—"}</div>
             </div>
-            <div className="rounded-xl bg-slate-950/65 border border-white/10 px-4 py-3">
-              <div className="text-xs uppercase tracking-wide text-slate-300">Calibration</div>
-              <div className={`text-sm font-medium ${confidenceTone}`}>{calibration.text}</div>
-              <div className="text-xs text-slate-400">Move the phone in a slow figure-8 if the reticle drifts.</div>
+            <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
+              <div className="text-[10px] uppercase tracking-wide text-slate-300">Calibration</div>
+              <div className={`text-sm font-medium leading-tight ${confidenceTone}`}>{calibration.text}</div>
             </div>
           </div>
         </div>
-        <div className="absolute top-2 right-2 flex gap-2 pointer-events-auto">
+
+        <div
+          className="absolute right-3 md:right-6 flex items-center gap-2 pointer-events-auto"
+          style={{ top: "max(12px, env(safe-area-inset-top))" }}
+        >
           {!orientationEnabled && (
-            <button className="px-3 py-1 rounded-lg bg-slate-900/80 text-white border border-border" onClick={enableOrientation}>
+            <button className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm" onClick={enableOrientation}>
               Enable compass
             </button>
           )}
-          <button className="px-3 py-1 rounded-lg bg-slate-900/80 text-white border border-border" onClick={onClose}>Close</button>
+          <button className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm" onClick={onClose}>Close</button>
         </div>
-        {supportMsg && <div className="p-3 text-sm text-red-200">{supportMsg}</div>}
+
+        {supportMsg && (
+          <div
+            className="absolute left-3 right-3 md:left-6 md:right-6 pointer-events-none"
+            style={{ top: "calc(max(12px, env(safe-area-inset-top)) + 84px)" }}
+          >
+            <div className="rounded-xl border border-red-300/35 bg-red-900/35 px-3 py-2 text-sm text-red-100">{supportMsg}</div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -234,4 +252,11 @@ function buildReticlePosition(deltaAz, deltaAlt) {
   const x = deltaAz == null ? 0 : Math.max(-120, Math.min(120, deltaAz * 4));
   const y = deltaAlt == null ? 0 : Math.max(-140, Math.min(140, deltaAlt * -4));
   return { x, y };
+}
+
+function compactStatus(statusText) {
+  if (!statusText) return "";
+  const line = String(statusText).split(/\r?\n/).map((part) => part.trim()).filter(Boolean)[0] || "";
+  if (!line) return "";
+  return line.length > 92 ? `${line.slice(0, 89)}...` : line;
 }
