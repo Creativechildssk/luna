@@ -16,18 +16,18 @@ function normalizeGeoError(err) {
 }
 
 function requestCurrentPosition() {
-  const relaxedOptions = { enableHighAccuracy: false, timeout: 20000, maximumAge: 120000 };
   const strictOptions = { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 };
+  const fallbackOptions = { enableHighAccuracy: false, timeout: 12000, maximumAge: 0 };
 
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      resolve,
-      () => {
-        // Retry once with strict GPS options if coarse lookup fails.
-        navigator.geolocation.getCurrentPosition(resolve, reject, strictOptions);
-      },
-      relaxedOptions
-    );
+  function getPosition(options) {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, options);
+    });
+  }
+
+  return getPosition(strictOptions).catch(async () => {
+    // Fallback if high-accuracy lock is not available quickly.
+    return getPosition(fallbackOptions);
   });
 }
 
@@ -92,11 +92,19 @@ export default function LocationPicker({ onChange }) {
             setBusy(true);
             try {
               const pos = await requestCurrentPosition();
-              const { latitude, longitude } = pos.coords;
+              const { latitude, longitude, accuracy } = pos.coords;
+
+              // Ignore very poor fixes that can place users far away.
+              if (typeof accuracy === "number" && accuracy > 2500) {
+                setMsg("Location fix is too coarse right now (>2.5 km). Move near open sky and tap Locate again.");
+                return;
+              }
+
               setLat(latitude.toFixed(6));
               setLon(longitude.toFixed(6));
               onChange(latitude, longitude);
-              setMsg("Refreshed from browser");
+              const accuracyMsg = typeof accuracy === "number" ? ` (${Math.round(accuracy)} m)` : "";
+              setMsg(`Refreshed from browser${accuracyMsg}`);
             } catch (err) {
               setMsg(normalizeGeoError(err));
             } finally {
