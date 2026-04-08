@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from './api';
 import LocationPicker from './components/LocationPicker';
@@ -30,6 +30,41 @@ export default function App() {
   const [satRange, setSatRange] = useState('today'); // today|tomorrow|week|month
   const [satSearch, setSatSearch] = useState('');
   const [showAR, setShowAR] = useState(false);
+  const [installPromptEvent, setInstallPromptEvent] = useState(null);
+  const [installSupported, setInstallSupported] = useState(false);
+  const [installDismissed, setInstallDismissed] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const media = window.matchMedia?.('(display-mode: standalone)');
+    const isStandalone = media?.matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      setInstallDismissed(true);
+    }
+
+    function onBeforeInstallPrompt(event) {
+      event.preventDefault();
+      setInstallPromptEvent(event);
+      setInstallSupported(true);
+    }
+
+    function onAppInstalled() {
+      setInstallPromptEvent(null);
+      setInstallSupported(false);
+      setInstallDismissed(true);
+    }
+
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+    window.addEventListener('appinstalled', onAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', onAppInstalled);
+    };
+  }, []);
 
   const moon = useQuery({
     queryKey: ['moon', lat, lon],
@@ -140,6 +175,21 @@ export default function App() {
   const apiConnected = backendStatus === 'ok';
   const titleTone = apiConnected ? 'text-emerald-300' : 'text-amber-300';
   const titleStatus = apiConnected ? 'Connected' : 'Disconnected';
+  const canInstall = !!installPromptEvent && installSupported && !installDismissed;
+
+  async function handleInstallClick() {
+    if (!installPromptEvent) return;
+
+    installPromptEvent.prompt();
+    const choice = await installPromptEvent.userChoice;
+
+    if (choice?.outcome === 'accepted') {
+      setInstallDismissed(true);
+    }
+
+    setInstallPromptEvent(null);
+    setInstallSupported(false);
+  }
 
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-4 space-y-5 dashboard">
@@ -157,6 +207,29 @@ export default function App() {
         </div>
         <StatusDot status={backendStatus} label="API" message={statusTooltip} />
       </header>
+
+      {canInstall && (
+        <div className="card p-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="text-sm font-semibold">Install LUNA app</div>
+            <div className="text-xs text-muted">Use home-screen install for faster launch and offline shell support.</div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="px-3 py-2 rounded-lg bg-accent text-slate-900 font-semibold"
+              onClick={handleInstallClick}
+            >
+              Install app
+            </button>
+            <button
+              className="px-3 py-2 rounded-lg border border-border text-sm"
+              onClick={() => setInstallDismissed(true)}
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="card p-2">
         <div className="flex gap-2 overflow-x-auto">
