@@ -8,6 +8,7 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
   const [supportMsg, setSupportMsg] = useState("");
   const [orientationEnabled, setOrientationEnabled] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [cinemaMode, setCinemaMode] = useState(false);
   const [calibration, setCalibration] = useState({ level: "waiting", text: "Enable compass to begin calibration." });
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -113,22 +114,33 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
         <div className="absolute inset-0 bg-gradient-to-b from-black/65 via-transparent to-black/70" />
 
         <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="absolute left-3 right-3 md:left-6 md:right-6 flex items-start justify-between gap-3"
-            style={{ top: "max(12px, env(safe-area-inset-top))" }}
-          >
-            <div className="rounded-2xl bg-slate-950/62 border border-white/10 px-3 py-2 max-w-[76%]">
-              <div className="text-[10px] uppercase tracking-[0.22em] text-slate-300">AR Guide</div>
-              <div className="text-xl md:text-2xl font-semibold leading-tight">{targetName}</div>
-              <div className="text-xs md:text-sm text-slate-300 leading-snug">{statusLine || "Use the reticle to align with target."}</div>
-            </div>
+          {!cinemaMode && (
+            <div
+              className="absolute left-3 right-3 md:left-6 md:right-6 flex items-start justify-between gap-3"
+              style={{ top: "max(12px, env(safe-area-inset-top))" }}
+            >
+              <div className="rounded-2xl bg-slate-950/62 border border-white/10 px-3 py-2 max-w-[76%]">
+                <div className="text-[10px] uppercase tracking-[0.22em] text-slate-300">AR Guide</div>
+                <div className="text-xl md:text-2xl font-semibold leading-tight">{targetName}</div>
+                <div className="text-xs md:text-sm text-slate-300 leading-snug">{statusLine || "Use the reticle to align with target."}</div>
+              </div>
 
-            <div className="rounded-2xl bg-slate-950/62 border border-white/10 px-3 py-2 text-right min-w-[96px]">
-              <div className="text-[10px] uppercase tracking-wide text-slate-300">Heading</div>
-              <div className="text-lg font-semibold tabular-nums">{heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
-              <div className={`text-xs ${confidenceTone}`}>Compass {calibration.level}</div>
+              <div className="rounded-2xl bg-slate-950/62 border border-white/10 px-3 py-2 text-right min-w-[96px]">
+                <div className="text-[10px] uppercase tracking-wide text-slate-300">Heading</div>
+                <div className="text-lg font-semibold tabular-nums">{heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
+                <div className={`text-xs ${confidenceTone}`}>Compass {calibration.level}</div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {cinemaMode && (
+            <div
+              className="absolute left-3 rounded-xl bg-slate-950/58 border border-white/10 px-3 py-1.5"
+              style={{ top: "max(12px, env(safe-area-inset-top))" }}
+            >
+              <div className="text-xs text-slate-200">{targetName} · {heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
+            </div>
+          )}
 
           <div className="absolute inset-0 flex items-center justify-center">
             <div
@@ -145,31 +157,36 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
             />
           </div>
 
-          <div
-            className="absolute left-3 right-3 md:left-6 md:right-6 grid grid-cols-1 sm:grid-cols-3 gap-2"
-            style={{ bottom: "max(12px, env(safe-area-inset-bottom))" }}
-          >
-            <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
-              <div className="text-[10px] uppercase tracking-wide text-slate-300">Horizontal</div>
-              <div className="text-base font-semibold leading-tight">{dirText || "Waiting for heading"}</div>
-              <div className="text-xs text-slate-400">Az {azimuth != null ? `${azimuth.toFixed(0)}°` : "—"}</div>
+          {!cinemaMode && (
+            <div
+              className="absolute left-3 right-3 md:left-6 md:right-6 grid grid-cols-1 sm:grid-cols-3 gap-2"
+              style={{ bottom: "max(12px, env(safe-area-inset-bottom))" }}
+            >
+              <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wide text-slate-300">Horizontal</div>
+                <div className="text-base font-semibold leading-tight">{dirText || "Waiting for heading"}</div>
+                <div className="text-xs text-slate-400">Az {azimuth != null ? `${azimuth.toFixed(0)}°` : "—"}</div>
+              </div>
+              <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wide text-slate-300">Vertical</div>
+                <div className="text-base font-semibold leading-tight">{altText || "Waiting for tilt"}</div>
+                <div className="text-xs text-slate-400">Alt {altitude != null ? `${altitude.toFixed(0)}°` : "—"}</div>
+              </div>
+              <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
+                <div className="text-[10px] uppercase tracking-wide text-slate-300">Calibration</div>
+                <div className={`text-sm font-medium leading-tight ${confidenceTone}`}>{calibration.text}</div>
+              </div>
             </div>
-            <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
-              <div className="text-[10px] uppercase tracking-wide text-slate-300">Vertical</div>
-              <div className="text-base font-semibold leading-tight">{altText || "Waiting for tilt"}</div>
-              <div className="text-xs text-slate-400">Alt {altitude != null ? `${altitude.toFixed(0)}°` : "—"}</div>
-            </div>
-            <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
-              <div className="text-[10px] uppercase tracking-wide text-slate-300">Calibration</div>
-              <div className={`text-sm font-medium leading-tight ${confidenceTone}`}>{calibration.text}</div>
-            </div>
-          </div>
+          )}
         </div>
 
         <div
           className="absolute right-3 md:right-6 flex items-center gap-2 pointer-events-auto"
           style={{ top: "max(12px, env(safe-area-inset-top))" }}
         >
+          <button className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm" onClick={() => setCinemaMode((v) => !v)}>
+            {cinemaMode ? "HUD" : "Cinema"}
+          </button>
           {!orientationEnabled && (
             <button className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm" onClick={enableOrientation}>
               Enable compass
