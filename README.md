@@ -58,6 +58,11 @@ Certs: mount /etc/letsencrypt for TLS; nginx listens on 443 if certs exist.
 ## Deploy notes
 - Open SG ports 80/443; Postgres on 5432 internal
 - For TLS: sudo certbot certonly --standalone -d <domain> then docker compose up -d
+- For AWS package reliability, optionally set pip mirror vars before build:
+  - PIP_INDEX_URL (example: your CodeArtifact/simple endpoint)
+  - PIP_EXTRA_INDEX_URL (optional fallback)
+  - PIP_TRUSTED_HOST (host without protocol)
+  Then run docker compose build backend --no-cache.
 - Renewal cron example:
   `
   0 3 * * * /usr/bin/certbot renew --quiet --deploy-hook "cd /home/ubuntu/luna && docker compose restart nginx"
