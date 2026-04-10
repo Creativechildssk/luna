@@ -1,9 +1,9 @@
-﻿# LUNA
-
-Full-stack moon/planet/satellite visibility API with web UI.
-
-## Version
 # LUNA
+
+[![Version](https://img.shields.io/badge/version-v2.0.0-2dd4bf)](docs/releases/v2.0.0.md)
+[![Backend](https://img.shields.io/badge/backend-FastAPI-059669)](backend/README.md)
+[![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-2563eb)](web/package.json)
+[![License](https://img.shields.io/badge/license-MIT-a855f7)](LICENSE)
 
 LUNA is a full-stack sky visibility platform for moon, planet, satellite, and mission tracking. It combines a FastAPI backend for astronomical calculations with a React web client designed for interactive observation workflows, including AR-assisted pointing and live satellite identification.
 
@@ -24,6 +24,8 @@ Current version: v2.0.0
 - Better installability with PWA prompts and offline shell support.
 - Formal semantic versioning workflow with automated version bump tooling.
 
+Release notes: [docs/releases/v2.0.0.md](docs/releases/v2.0.0.md)
+
 ## Architecture summary
 - Backend: FastAPI, Skyfield, SQLAlchemy, PostgreSQL or SQLite fallback.
 - Frontend: React, Vite, Tailwind CSS, TanStack Query, Framer Motion, Leaflet.
@@ -35,7 +37,7 @@ Detailed architecture: [docs/architecture.md](docs/architecture.md)
 ## Repository layout
 - backend/: FastAPI service, astronomical services, models, and API routers.
 - web/: React web application and PWA shell.
-- docs/: product, architecture, API, and release documentation.
+- docs/: product, architecture, API, release, and versioning documentation.
 - wiki/: GitHub-ready wiki pages stored in-repo.
 - tools/: maintenance scripts, including semantic version bumping.
 - data/: sample and mission data.
@@ -73,6 +75,23 @@ Services:
 
 More setup guidance: [docs/getting-started.md](docs/getting-started.md)
 
+## Quick API examples
+
+### Health check
+```bash
+curl http://127.0.0.1:8000/health/
+```
+
+### Moon window for a location
+```bash
+curl "http://127.0.0.1:8000/moon/window?lat=11.532939&lon=76.1288&days=7"
+```
+
+### Visible satellites near a location
+```bash
+curl "http://127.0.0.1:8000/satellite/visible?lat=11.532939&lon=76.1288&hours=12&limit=10"
+```
+
 ## API surface
 Primary route groups:
 - `/health`
@@ -99,6 +118,7 @@ Recommended deployment reference: [docs/release-process.md](docs/release-process
 - [docs/api.md](docs/api.md)
 - [docs/versioning.md](docs/versioning.md)
 - [docs/release-process.md](docs/release-process.md)
+- [docs/releases/v2.0.0.md](docs/releases/v2.0.0.md)
 - [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Semantic versioning policy
@@ -157,43 +177,3 @@ The repository includes a `wiki/` directory with pages prepared for GitHub Wiki 
 - Open-Meteo
 - CelesTrak
 - WFd DeepTech Labs
-docker compose up -d --build
-`
-Services: backend (8000 internal), web (3000 internal), nginx (80/443), postgres (5432).
-Certs: mount /etc/letsencrypt for TLS; nginx listens on 443 if certs exist.
-
-## Production endpoint
-- Web: https://luna.wfddeeptechlabs.com
-- API proxied at /api/*
-
-## Features
-- Moon/planet/satellite visibility window (rise/set/best, duration, direction, distance)
-- Visibility state, is_night, quality score (cloud cover via Open-Meteo)
-- Satellite list/track (CelesTrak TLE), alerts API (Postgres)
-- Live countdowns, responsive layout, AR Quick View (camera + heading)
-- Error banners, skeleton loaders, compass visual, timeline progress
-
-## AR Quick View
-- Access via “📷 AR view” on Visibility card
-- Uses device camera + orientation to guide to target az/alt (web, no install)
-
-## Known limitations
-- Geolocation blocked on plain HTTP; use HTTPS or enter lat/lon manually
-- AR is lightweight (no plane detection); guidance uses compass accuracy
-
-## Deploy notes
-- Open SG ports 80/443; Postgres on 5432 internal
-- For TLS: sudo certbot certonly --standalone -d <domain> then docker compose up -d
-- For AWS package reliability, optionally set pip mirror vars before build:
-  - PIP_INDEX_URL (example: your CodeArtifact/simple endpoint)
-  - PIP_EXTRA_INDEX_URL (optional fallback)
-  - PIP_TRUSTED_HOST (host without protocol)
-  Then run docker compose build backend --no-cache.
-- Renewal cron example:
-  `
-  0 3 * * * /usr/bin/certbot renew --quiet --deploy-hook "cd /home/ubuntu/luna && docker compose restart nginx"
-  `
-
-## Credits
-- Skyfield, Open-Meteo, CelesTrak
-- Powered by WFd DeepTech Labs

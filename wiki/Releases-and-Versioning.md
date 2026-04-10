@@ -20,6 +20,16 @@ python tools/version_bump.py --part fix
 3. Commit the release.
 4. Push a Git tag.
 
+## Current baseline release
+### v2.0.0
+- Dashboard refresh with better visual hierarchy.
+- Improved moon phase presentation and viewing score card.
+- Live Identify quick tool and stronger AR workflow support.
+- Professionalized documentation, wiki, and release process.
+- Semantic versioning automation with `tools/version_bump.py`.
+
+Detailed release notes: [docs/releases/v2.0.0.md](../docs/releases/v2.0.0.md)
+
 Detailed references:
 - [docs/versioning.md](../docs/versioning.md)
 - [docs/release-process.md](../docs/release-process.md)
