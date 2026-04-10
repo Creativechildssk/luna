@@ -41,14 +41,14 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", lat
       </div>
 
       <div className="flex-1 min-w-0 text-center xl:text-left">
-        <div className="text-base md:text-lg text-slate-300">Phase:</div>
-        <div className="mt-1 text-2xl md:text-3xl font-semibold leading-tight capitalize text-slate-100 break-words">
-          {phase_hint || "—"}
+        <div className="text-xs text-muted uppercase tracking-widest">Phase</div>
+        <div className="mt-1 text-base md:text-lg font-semibold leading-snug capitalize text-slate-100">
+          {phase_hint || '—'}
         </div>
-        <div className="mt-2 text-4xl md:text-5xl leading-none font-semibold tracking-tight text-slate-300">
+        <div className="mt-2 text-3xl md:text-4xl leading-none font-bold tracking-tight text-accent">
           {percent.toFixed(0)}%
         </div>
-        <div className="mt-1 text-lg md:text-xl text-slate-400">illuminated</div>
+        <div className="mt-1 text-sm md:text-base text-slate-400">illuminated</div>
         <div className="mt-2 text-xs md:text-sm text-slate-500">{hemisphereLabel}</div>
       </div>
     </div>

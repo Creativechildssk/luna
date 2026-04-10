@@ -299,25 +299,25 @@ export default function App() {
         </div>
       )}
 
-      <div className="card p-2">
-        <div className="flex gap-2 overflow-x-auto">
-          {[
-            { key: 'moon', label: 'Moon' },
-            { key: 'planet', label: 'Planets' },
-            { key: 'satellite', label: 'Satellites' },
-            { key: 'mission', label: 'Missions' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              className={`flex-1 min-w-[100px] px-3 py-2 rounded-lg border border-border text-center ${
-                view === tab.key ? 'bg-accent text-slate-900' : 'bg-transparent'
-              }`}
-              onClick={() => setView(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex gap-1 overflow-x-auto p-1.5 bg-[#0a1018]/80 rounded-2xl border border-border/60">
+        {[
+          { key: 'moon', label: '🌙  Moon' },
+          { key: 'planet', label: '🪐  Planets' },
+          { key: 'satellite', label: '🛰  Satellites' },
+          { key: 'mission', label: '🚀  Missions' },
+        ].map((tab) => (
+          <button
+            key={tab.key}
+            className={`flex-1 min-w-[90px] px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+              view === tab.key
+                ? 'bg-accent text-slate-900 shadow-md shadow-accent/20'
+                : 'text-muted hover:text-slate-200 hover:bg-white/5'
+            }`}
+            onClick={() => setView(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
       <QuickSliderMenu items={quickToolItems} selectedKey={quickTool} onSelect={setQuickTool} />
@@ -345,18 +345,21 @@ export default function App() {
       {view !== 'mission' && (
       <>
       <div className="grid grid-cols-1 md:grid-cols-5 stats-grid gap-3 stats-grid">
-        <div className="card p-4 space-y-2">
-          <div className="text-sm text-muted">Visibility</div>
-          <div className="text-lg font-semibold">{summary.visible ? 'Visible now' : 'Below horizon'}</div>
-          <div className="text-sm text-muted">
-            Az {fmtDeg(summary.azimuth)}, Alt {fmtDeg(summary.altitude)}, Dir {summary.direction || '—'}
+        <div className="card p-4 flex flex-col gap-2">
+          <div className="text-xs text-muted uppercase tracking-widest">Visibility</div>
+          <div className={`text-xl font-bold flex items-center gap-2 ${summary.visible ? 'text-emerald-300' : 'text-slate-400'}`}>
+            <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${summary.visible ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.7)]' : 'bg-slate-600'}`} />
+            {summary.visible ? 'Visible now' : 'Below horizon'}
           </div>
-          <div className="text-sm text-muted">
-            Distance {summary.distance_km ? `${Math.round(summary.distance_km)} km` : '—'}
+          <div className="text-sm text-slate-400">
+            Az {fmtDeg(summary.azimuth)} · Alt {fmtDeg(summary.altitude)} · {summary.direction || '—'}
+          </div>
+          <div className="text-sm text-slate-500">
+            {summary.distance_km ? `${Math.round(summary.distance_km).toLocaleString()} km away` : '—'}
           </div>
           {summary.azimuth != null && (
             <button
-              className="mt-2 text-xs px-3 py-1 rounded-lg border border-border inline-flex items-center gap-1"
+              className="mt-1 text-xs px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/30 text-accent font-medium hover:bg-accent/20 transition inline-flex items-center gap-1.5"
               onClick={() => setShowAR(true)}
             >
               📷 AR view
@@ -368,11 +371,17 @@ export default function App() {
 
         <SkyCompass azimuth={summary.azimuth} altitude={summary.altitude} direction={summary.direction} />
 
-        <div className="card p-4 space-y-2">
-          <div className="text-sm text-muted">Status</div>
-          <div className="text-base">{summary.status || 'Set a location to load data.'}</div>
-          <div className="text-xs text-muted">State: {summary.state || '—'}</div>
-          <div className="text-xs text-muted">Night? {summary.is_night ? 'Yes' : 'No'}</div>
+        <div className="card p-4 flex flex-col gap-2">
+          <div className="text-xs text-muted uppercase tracking-widest">Status</div>
+          <div className="text-sm text-slate-200 leading-relaxed">{fmtStatusMessage(summary.status) || 'Set a location to load data.'}</div>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className="text-xs px-2 py-0.5 rounded-full border border-border text-slate-400 capitalize">
+              {summary.state?.replace(/_/g, ' ') || '—'}
+            </span>
+            <span className={`text-xs ${summary.is_night ? 'text-indigo-300' : 'text-amber-300'}`}>
+              {summary.is_night ? '🌙 Night' : '☀️ Day'}
+            </span>
+          </div>
         </div>
 
         <QualityCard score={quality.score} label={quality.label} details={quality.details || weatherDetails(weather.data)} />
@@ -572,6 +581,21 @@ function weatherDetails(weather) {
 function fmtDeg(val) {
   if (val === null || val === undefined) return '—';
   return `${val}°`;
+}
+
+function fmtStatusMessage(msg) {
+  if (!msg) return '';
+  return msg.replace(
+    /~?(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+\-]\d{2}:\d{2}|Z))/g,
+    (_, ts) => {
+      try {
+        return new Date(ts).toLocaleString(undefined, {
+          month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: false,
+        });
+      } catch { return ts; }
+    }
+  );
 }
 
 

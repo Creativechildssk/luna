@@ -27,6 +27,7 @@ export default function CountdownGrid({ data, fmtTime }) {
         value={bestCountdown ?? formatMinutes(data?.minutes_until_best)}
         sub={fmtTime(data?.best_observation_time_local)}
         loading={loading}
+        accent
       />
       <StatCard
         label="Duration"
