@@ -139,6 +139,8 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
   const bestLiveMatch = liveMatches[0] || null;
   const liveStatusText = !liveIdentifyEnabled
     ? "Live identify is disabled in slider menu."
+    : !(typeof userLat === "number" && typeof userLon === "number")
+    ? "Live identify needs location access. Set location and try again."
     : liveSat.isLoading
     ? "Scanning nearby satellites..."
     : liveSat.error

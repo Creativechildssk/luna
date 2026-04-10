@@ -32,6 +32,7 @@ export default function App() {
   const [satSearch, setSatSearch] = useState('');
   const [showAR, setShowAR] = useState(false);
   const [quickTool, setQuickTool] = useState('live-identify');
+  const [quickToolNotice, setQuickToolNotice] = useState('');
 
   const quickToolItems = useMemo(
     () => [
@@ -248,6 +249,33 @@ export default function App() {
     }
   }
 
+  function handleQuickToolSelect(key) {
+    setQuickTool(key);
+
+    if (key !== 'live-identify') {
+      setQuickToolNotice(`${quickToolItems.find((item) => item.key === key)?.label || 'This feature'} is coming soon.`);
+      return;
+    }
+
+    setQuickToolNotice('');
+
+    if (!hasCoordinates(lat, lon)) {
+      setQuickToolNotice('Set your location first to start Live Identify.');
+      return;
+    }
+
+    if (view === 'mission') {
+      setView('moon');
+    }
+
+    if (summary.azimuth == null || summary.altitude == null) {
+      setQuickToolNotice('Loading sky position. Try Live Identify again in a moment.');
+      return;
+    }
+
+    setShowAR(true);
+  }
+
   return (
     <div className="max-w-[1400px] mx-auto px-6 py-4 space-y-5 dashboard">
       <header className="flex items-center justify-between flex-wrap gap-2">
@@ -320,7 +348,13 @@ export default function App() {
         ))}
       </div>
 
-      <QuickSliderMenu items={quickToolItems} selectedKey={quickTool} onSelect={setQuickTool} />
+      <QuickSliderMenu items={quickToolItems} selectedKey={quickTool} onSelect={handleQuickToolSelect} />
+
+      {quickToolNotice && (
+        <div className="card p-3 text-sm text-slate-300 border-amber-400/35 bg-amber-400/10">
+          {quickToolNotice}
+        </div>
+      )}
 
       {activeError && <ErrorBanner message={`Failed to load data: ${activeError.message}`} onRetry={activeRetry} />}
       {view === 'satellite' && satList.error && (
