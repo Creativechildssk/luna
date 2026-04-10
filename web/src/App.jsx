@@ -255,10 +255,6 @@ export default function App() {
           <div className="text-xs text-muted uppercase tracking-wide">LUNA v1.0.0</div>
           <div className="flex items-center gap-2">
             <h1 className={`text-2xl font-bold ${titleTone}`}>Sky Window</h1>
-            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full border ${apiConnected ? 'text-emerald-200 border-emerald-400/50 bg-emerald-400/10' : 'text-amber-200 border-amber-400/50 bg-amber-400/10'}`}>
-              <span className={`w-2 h-2 rounded-full ${apiConnected ? 'bg-emerald-300' : 'bg-amber-300'}`} />
-              {titleStatus}
-            </span>
           </div>
           <div className="text-sm text-muted">Moon · planets · satellites · visibility and best time to look</div>
         </div>
