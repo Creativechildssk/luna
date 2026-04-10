@@ -19,8 +19,11 @@ COPY requirements.txt .
 RUN if [ -n "$PIP_INDEX_URL" ]; then pip config set global.index-url "$PIP_INDEX_URL"; fi && \
     if [ -n "$PIP_EXTRA_INDEX_URL" ]; then pip config set global.extra-index-url "$PIP_EXTRA_INDEX_URL"; fi && \
     if [ -n "$PIP_TRUSTED_HOST" ]; then pip config set global.trusted-host "$PIP_TRUSTED_HOST"; fi && \
+    echo "[build] Upgrading pip tooling..." && \
     pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir --prefer-binary --retries 8 --timeout 120 -r requirements.txt
+    echo "[build] Installing Python dependencies from requirements.txt..." && \
+    pip install --no-cache-dir --prefer-binary --retries 8 --timeout 120 -v -r requirements.txt && \
+    echo "[build] Python dependencies installed successfully."
 
 COPY app /app/app
 
