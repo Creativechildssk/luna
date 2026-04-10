@@ -9,6 +9,24 @@ LUNA is a full-stack sky visibility platform for moon, planet, satellite, and mi
 
 Current version: v2.0.0
 
+> A modern observation workspace for answering one practical question fast: what is in the sky right now, where is it, and when is the best time to look?
+
+## At a glance
+
+| Area | What you get |
+| --- | --- |
+| Observation | Moon, planet, satellite, and mission visibility in one workflow |
+| Guidance | Direction, altitude, timing, quality score, and AR assistance |
+| Platform | FastAPI backend, React PWA frontend, Docker Compose deployment |
+| Data | Skyfield ephemerides, CelesTrak TLEs, Open-Meteo weather |
+| Release baseline | Version 2 with semantic versioning and release workflow |
+
+## Why it feels different
+- Built around observation decisions, not just raw astronomy data.
+- Fast dashboard flow from location input to visibility, direction, timing, and action.
+- Mobile-friendly AR assistance for real-world pointing and live satellite identification.
+- Documentation, wiki content, and release tooling prepared for a product-grade repository.
+
 ## What LUNA provides
 - Moon visibility windows, rise and set timing, best-view calculation, illumination, and phase context.
 - Planet visibility and directional tracking for supported bodies.
@@ -26,6 +44,23 @@ Current version: v2.0.0
 
 Release notes: [docs/releases/v2.0.0.md](docs/releases/v2.0.0.md)
 
+## Core experiences
+
+### Sky Window
+- Unified visibility cards for moon, planets, satellites, and missions.
+- Best-view timing, direction, altitude, and observation score in one screen.
+
+### Live Identify
+- Match the phone camera direction with predicted visible satellites.
+- Built for immediate field use rather than offline post-processing.
+
+### AR Quick View
+- Camera-led directional guidance with mobile-friendly fullscreen flow.
+- Useful when the user wants to aim quickly without reading a dense chart.
+
+### Release-ready workflow
+- Versioned docs, contributor guidance, wiki pages, and scripted semantic version bumps.
+
 ## Architecture summary
 - Backend: FastAPI, Skyfield, SQLAlchemy, PostgreSQL or SQLite fallback.
 - Frontend: React, Vite, Tailwind CSS, TanStack Query, Framer Motion, Leaflet.
@@ -33,6 +68,28 @@ Release notes: [docs/releases/v2.0.0.md](docs/releases/v2.0.0.md)
 - Data sources: Skyfield ephemerides, CelesTrak TLE data, Open-Meteo weather.
 
 Detailed architecture: [docs/architecture.md](docs/architecture.md)
+
+```mermaid
+flowchart LR
+	User[Observer] --> Web[React PWA]
+	Web --> API[FastAPI Backend]
+	API --> Skyfield[Skyfield Ephemerides]
+	API --> TLE[CelesTrak TLE Data]
+	API --> Weather[Open-Meteo]
+	API --> DB[(PostgreSQL)]
+	Web --> AR[AR Quick View]
+```
+
+## Feature matrix
+
+| Capability | Moon | Planets | Satellites | Missions |
+| --- | --- | --- | --- | --- |
+| Visibility window | Yes | Yes | Yes | Linked tracking |
+| Direction and altitude | Yes | Yes | Yes | Via tracking |
+| Best-view timing | Yes | Yes | Pass-based | Mission-dependent |
+| Track visualization | Limited | Limited | Yes | Yes |
+| AR support | Yes | Yes | Yes | Contextual |
+| Alerts | No | No | Yes | Indirect |
 
 ## Repository layout
 - backend/: FastAPI service, astronomical services, models, and API routers.
@@ -92,6 +149,19 @@ curl "http://127.0.0.1:8000/moon/window?lat=11.532939&lon=76.1288&days=7"
 curl "http://127.0.0.1:8000/satellite/visible?lat=11.532939&lon=76.1288&hours=12&limit=10"
 ```
 
+### Create an alert for a tracked object
+```bash
+curl -X POST http://127.0.0.1:8000/alerts/ \
+	-H "Content-Type: application/json" \
+	-d '{
+		"identifier": "ISS",
+		"lat": 11.532939,
+		"lon": 76.1288,
+		"threshold_minutes": 10,
+		"callback_url": "https://example.com/webhook"
+	}'
+```
+
 ## API surface
 Primary route groups:
 - `/health`
@@ -120,6 +190,11 @@ Recommended deployment reference: [docs/release-process.md](docs/release-process
 - [docs/release-process.md](docs/release-process.md)
 - [docs/releases/v2.0.0.md](docs/releases/v2.0.0.md)
 - [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Roadmap direction
+- Expand quick tools beyond Live Identify into aircraft, meteor, and deep-sky guidance.
+- Continue tightening the observation workflow for mobile field use.
+- Keep API contracts stable and versioned as the platform grows.
 
 ## Semantic versioning policy
 LUNA uses semantic versioning:
