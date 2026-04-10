@@ -1,4 +1,4 @@
-# LUNA Backend – Developer Handoff (v1.0.0)
+# LUNA Backend – Developer Handoff (v2.0.0)
 
 FastAPI service for Moon / planet / satellite visibility windows, rise/set countdowns, ground tracks, and illumination.
 Stack: Python 3.12, FastAPI, Skyfield.

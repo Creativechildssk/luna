@@ -17,7 +17,7 @@ def _parse_origins(raw_value: str | None) -> list[str]:
 
 class Settings:
     APP_NAME = "LUNA"
-    VERSION = "1.0"
+    VERSION = "2.0.0"
     CORS_ORIGINS = _parse_origins(os.getenv("CORS_ORIGINS"))
 
     @property

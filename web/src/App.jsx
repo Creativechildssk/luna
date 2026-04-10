@@ -252,7 +252,7 @@ export default function App() {
     <div className="max-w-[1400px] mx-auto px-6 py-4 space-y-5 dashboard">
       <header className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <div className="text-xs text-muted uppercase tracking-wide">LUNA v1.0.0</div>
+          <div className="text-xs text-muted uppercase tracking-wide">LUNA v2.0.0</div>
           <div className="flex items-center gap-2">
             <h1 className={`text-2xl font-bold ${titleTone}`}>Sky Window</h1>
           </div>
@@ -488,7 +488,7 @@ export default function App() {
       <footer className="text-sm text-muted pt-4 border-t border-border flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1">
           <span role="img" aria-label="moon">🌙</span>
-          LUNA v1.0.0
+          LUNA v2.0.0
         </span>
         <span className="text-muted">•</span>
         <span className="inline-flex items-center gap-1">
