@@ -1,5 +1,7 @@
 # Getting Started
 
+If you just want to run the project quickly, use this page.
+
 ## Local setup
 
 ### Backend

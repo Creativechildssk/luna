@@ -1,14 +1,14 @@
 # Contributing to LUNA
 
-Thank you for contributing. This guide defines the expected workflow for code, documentation, and release work in this repository.
+Thanks for contributing. This guide explains how we work in this repo so changes stay clean, reviewable, and safe to release.
 
-## Contribution principles
-- Prefer focused changes over broad refactors.
-- Fix root causes when practical.
-- Keep backend API contracts stable unless a breaking change is intentional.
-- Update docs when behavior, setup, or public API changes.
+## Ground rules
+- Keep changes focused.
+- Fix the root issue when practical.
+- Treat API compatibility as important.
+- Update docs whenever behavior, setup, or API shape changes.
 
-## Development workflow
+## Typical workflow
 1. Create a feature branch from `main`.
 2. Make the smallest coherent change that solves the problem.
 3. Verify locally.
@@ -16,17 +16,17 @@ Thank you for contributing. This guide defines the expected workflow for code, d
 5. Open a pull request with a clear summary and testing notes.
 
 ## Backend expectations
-- Preserve FastAPI route behavior unless the change is intentionally breaking.
-- Keep business logic in `backend/app/services`, not in route handlers.
-- Use clear validation on request payloads and query parameters.
+- Preserve FastAPI route behavior unless the break is intentional and documented.
+- Keep business logic in `backend/app/services`, not route handlers.
+- Validate request payloads and query params clearly.
 
 ## Frontend expectations
-- Preserve the established LUNA visual language.
-- Prefer focused component changes over duplicating UI logic.
-- Ensure desktop and mobile behavior remain usable.
+- Preserve the existing LUNA visual language.
+- Prefer focused component edits over copy-paste UI logic.
+- Keep both desktop and mobile usable.
 
 ## Documentation expectations
-Documentation updates are required when you change:
+Update docs when you change:
 - setup steps
 - API surface
 - versioning or release process
@@ -50,7 +50,7 @@ python tools/version_bump.py --part fix
 - No unrelated files are committed accidentally.
 
 ## Pull request guidance
-Include:
+In each PR, include:
 - what changed
 - why it changed
 - how it was verified

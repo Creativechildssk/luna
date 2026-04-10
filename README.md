@@ -5,11 +5,13 @@
 [![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-2563eb)](web/package.json)
 [![License](https://img.shields.io/badge/license-MIT-a855f7)](LICENSE)
 
-LUNA is a full-stack sky visibility platform for moon, planet, satellite, and mission tracking. It combines a FastAPI backend for astronomical calculations with a React web client designed for interactive observation workflows, including AR-assisted pointing and live satellite identification.
+LUNA helps people answer a simple question quickly: what can I see in the sky right now, and when is the best time to look?
+
+Under the hood, it combines a FastAPI backend for astronomy calculations with a React web app built for everyday use on both desktop and mobile.
 
 Current version: v2.0.0
 
-> A modern observation workspace for answering one practical question fast: what is in the sky right now, where is it, and when is the best time to look?
+> If you are new here, start with the quick start section below, run the app locally, and open `/docs` to explore the API.
 
 ## At a glance
 
@@ -21,11 +23,11 @@ Current version: v2.0.0
 | Data | Skyfield ephemerides, CelesTrak TLEs, Open-Meteo weather |
 | Release baseline | Version 2 with semantic versioning and release workflow |
 
-## Why it feels different
-- Built around observation decisions, not just raw astronomy data.
-- Fast dashboard flow from location input to visibility, direction, timing, and action.
-- Mobile-friendly AR assistance for real-world pointing and live satellite identification.
-- Documentation, wiki content, and release tooling prepared for a product-grade repository.
+## Why people like using it
+- It is built around real observation decisions, not just raw astronomy numbers.
+- The dashboard moves quickly from location to direction, timing, and visibility.
+- AR mode works well for field use when you want to point and identify fast.
+- Docs, wiki pages, and release tooling are already in place for team collaboration.
 
 ## What LUNA provides
 - Moon visibility windows, rise and set timing, best-view calculation, illumination, and phase context.
@@ -58,7 +60,7 @@ Release notes: [docs/releases/v2.0.0.md](docs/releases/v2.0.0.md)
 - Camera-led directional guidance with mobile-friendly fullscreen flow.
 - Useful when the user wants to aim quickly without reading a dense chart.
 
-### Release-ready workflow
+### Team-ready workflow
 - Versioned docs, contributor guidance, wiki pages, and scripted semantic version bumps.
 
 ## Architecture summary
@@ -176,7 +178,7 @@ Interactive OpenAPI docs are available from the running backend at `/docs`.
 Full API guide: [docs/api.md](docs/api.md)
 
 ## Deployment notes
-- The default stack is designed for Docker Compose deployment.
+- The default stack is designed around Docker Compose.
 - TLS can be terminated by Nginx with mounted Let's Encrypt certificates.
 - AWS builds can use custom Python package mirrors through `PIP_INDEX_URL`, `PIP_EXTRA_INDEX_URL`, and `PIP_TRUSTED_HOST`.
 
@@ -193,7 +195,7 @@ Recommended deployment reference: [docs/release-process.md](docs/release-process
 
 ## Roadmap direction
 - Expand quick tools beyond Live Identify into aircraft, meteor, and deep-sky guidance.
-- Continue tightening the observation workflow for mobile field use.
+- Keep improving the mobile-first flow for real field use.
 - Keep API contracts stable and versioned as the platform grows.
 
 ## Semantic versioning policy

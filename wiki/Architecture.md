@@ -1,6 +1,6 @@
 # Architecture
 
-LUNA uses a split frontend and backend architecture.
+LUNA keeps things simple: backend API, frontend app, and deployment infrastructure.
 
 ## Backend
 - FastAPI application

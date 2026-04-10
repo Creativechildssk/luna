@@ -1,6 +1,6 @@
 # Architecture
 
-LUNA is organized as a service-oriented FastAPI backend with a separate React frontend and a lightweight deployment layer based on Docker Compose and Nginx.
+LUNA has a simple split architecture: a FastAPI backend, a React frontend, and a Docker Compose deployment layer.
 
 ## High-level components
 
@@ -40,9 +40,9 @@ LUNA is organized as a service-oriented FastAPI backend with a separate React fr
 - `web/src/index.css`: theme and global surface styling.
 
 ## Request flow
-1. The web app requests observation data using lat/lon and a selected view.
+1. The web app sends lat/lon and the selected view to the API.
 2. FastAPI delegates calculation work to the relevant service layer.
-3. Results are normalized into API payloads containing position, visibility state, timing, and metadata.
+3. Results are normalized into payloads with position, visibility, timing, and metadata.
 4. The frontend renders summary cards, maps, timelines, and AR support using those payloads.
 
 ## Deployment flow
@@ -52,10 +52,10 @@ LUNA is organized as a service-oriented FastAPI backend with a separate React fr
 4. The backend communicates with PostgreSQL and local astronomical data volumes.
 
 ## Design principles
-- Keep astronomical computation in backend services, not in the frontend.
-- Preserve backward compatibility for API consumers when possible.
-- Use the frontend to present a focused observation workflow rather than generic dashboards.
-- Isolate infrastructure concerns from feature logic.
+- Keep astronomy math in backend services, not frontend components.
+- Preserve backward compatibility for API consumers whenever possible.
+- Keep the UI focused on observation decisions instead of generic dashboards.
+- Keep infrastructure concerns separate from feature logic.
 
 ## Related docs
 - [docs/getting-started.md](docs/getting-started.md)

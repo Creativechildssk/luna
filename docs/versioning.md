@@ -1,6 +1,6 @@
 # Versioning
 
-LUNA uses semantic versioning and treats API stability as a first-class concern.
+LUNA follows semantic versioning, with API compatibility as the main decision point.
 
 ## Version format
 `MAJOR.MINOR.FIX`
@@ -13,7 +13,7 @@ Examples:
 ## What each part means
 
 ### Major
-Increment major when the change breaks compatibility.
+Use major when the change breaks compatibility.
 
 Examples:
 - endpoint removal
@@ -22,7 +22,7 @@ Examples:
 - changed response semantics that break existing clients
 
 ### Minor
-Increment minor when the change adds capabilities without breaking existing clients.
+Use minor when features are added without breaking existing clients.
 
 Examples:
 - new endpoints
@@ -31,7 +31,7 @@ Examples:
 - new optional request parameters
 
 ### Fix
-Increment fix when the change is a backward-compatible correction.
+Use fix when the change is a backward-compatible correction.
 
 Examples:
 - bug fixes
@@ -40,7 +40,7 @@ Examples:
 - performance improvements without contract changes
 
 ## FastAPI-aligned interpretation
-For FastAPI services, versioning should be driven by API compatibility rather than internal implementation details.
+For FastAPI services, version decisions should follow API compatibility, not internal refactors.
 
 Use these rules:
 - If an existing API client must change to keep working, bump major.

@@ -14,6 +14,6 @@ Recommended dashboard endpoints:
 - `/satellite/window`
 - `/satellite/visible`
 
-Use the running backend OpenAPI docs at `/docs` for exact request and response schemas.
+Use the running backend OpenAPI docs at `/docs` when you need exact request and response schemas.
 
 Detailed API doc: [docs/api.md](../docs/api.md)

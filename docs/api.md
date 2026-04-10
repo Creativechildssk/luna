@@ -1,6 +1,8 @@
 # API Reference
 
-Base behavior:
+This page gives a quick, practical map of the API surface.
+
+Basic behavior:
 - Interactive schema: `/docs`
 - Health endpoint: `/health/`
 - Primary response style: JSON
@@ -9,7 +11,7 @@ Base behavior:
 ## Health
 
 ### `GET /health/`
-Returns service liveness.
+Quick liveness check.
 
 Example response:
 ```json
@@ -41,14 +43,14 @@ Query:
 - `days`: integer, 1 to 14, default 7
 
 ### `GET /moon/window`
-Recommended moon endpoint.
+Recommended moon endpoint for the dashboard.
 
 Query:
 - `lat`: float
 - `lon`: float
 - `days`: integer, 1 to 14, default 7
 
-Typical fields include:
+Common response fields include:
 - `visible_now`
 - `visibility_state`
 - `rises_in`
@@ -132,7 +134,7 @@ Fetches a mission by id.
 Updates a mission.
 
 ### `DELETE /mission/{mission_id}`
-Marks a mission inactive or removes it according to service logic.
+Removes or deactivates a mission according to service logic.
 
 ### `GET /mission/{mission_id}/track`
 Query:
@@ -159,6 +161,6 @@ Payload:
 Deactivates an alert.
 
 ## Notes for API consumers
-- Use `/moon/window`, `/planet/window`, and `/satellite/window` for dashboard-style views.
-- Use `/satellite/track` and `/mission/{id}/track` for plotted movement data.
-- Use `/docs` for exact schema details generated from the running app.
+- Use `/moon/window`, `/planet/window`, and `/satellite/window` for dashboard views.
+- Use `/satellite/track` and `/mission/{id}/track` for path plotting.
+- Use `/docs` on a running backend for exact schema details.

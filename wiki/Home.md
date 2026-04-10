@@ -2,7 +2,9 @@
 
 Welcome to the LUNA project wiki.
 
-LUNA is a moon, planet, satellite, and mission visibility platform with a FastAPI backend and a React web client.
+If you are looking for the fastest way to understand the project, start here and jump into the links below.
+
+LUNA is a moon, planet, satellite, and mission visibility platform built on FastAPI and React.
 
 ## Wiki pages
 - [Getting Started](Getting-Started.md)
@@ -17,7 +19,7 @@ LUNA is a moon, planet, satellite, and mission visibility platform with a FastAP
 - browser AR support for pointing and live identification
 - mission and alert management
 
-For repository docs, see:
+For full repo docs, see:
 - [README](../README.md)
 - [docs/getting-started.md](../docs/getting-started.md)
 - [docs/api.md](../docs/api.md)

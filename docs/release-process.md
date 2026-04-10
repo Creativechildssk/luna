@@ -1,6 +1,6 @@
 # Release Process
 
-This document defines the recommended release workflow for LUNA.
+This is the release flow we use for LUNA.
 
 ## Release checklist
 1. Verify backend changes locally.
@@ -60,10 +60,10 @@ A release note should include:
 - deployment notes if relevant
 
 ## GitHub Wiki sync
-If wiki content changed, update the pages under `wiki/` and publish the same content to GitHub Wiki.
+If wiki content changed, update the pages under `wiki/` and publish matching content to GitHub Wiki.
 
 ## AWS deployment note
-If builds rely on custom package mirrors, ensure these are configured in the release environment before rebuilding backend images:
+If builds rely on custom package mirrors, configure these in the release environment before rebuilding backend images:
 - `PIP_INDEX_URL`
 - `PIP_EXTRA_INDEX_URL`
 - `PIP_TRUSTED_HOST`

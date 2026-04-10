@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide covers local development, Docker-based startup, and the minimum environment required to work productively on LUNA.
+If you want to run LUNA quickly, this is the shortest path.
 
 ## Prerequisites
 - Python 3.12
@@ -20,7 +20,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Notes:
-- `DATABASE_URL` is optional. If omitted, the project can fall back to local persistence where supported.
+- `DATABASE_URL` is optional.
 - First run may download astronomical data into `backend/app/data/`.
 
 ### 2. Start the web app
@@ -59,7 +59,7 @@ Then run:
 docker compose build backend --no-cache
 ```
 
-## Recommended development flow
+## Recommended day-to-day flow
 1. Start backend.
 2. Start web app.
 3. Open the backend docs at `http://127.0.0.1:8000/docs`.
@@ -69,15 +69,15 @@ docker compose build backend --no-cache
 ## Common issues
 
 ### Geolocation does not work
-- Browser geolocation may be blocked on plain HTTP.
+- Browsers often block geolocation on plain HTTP.
 - Use HTTPS or enter latitude and longitude manually.
 
-### AR mode is inaccurate
-- Mobile compass and orientation APIs depend on device calibration.
-- Test on a real device, outside if possible, with location permissions enabled.
+### AR mode feels inaccurate
+- Mobile compass and orientation APIs depend on calibration.
+- Test on a real phone outdoors when possible, with location permissions enabled.
 
 ### Initial backend requests are slow
-- Skyfield ephemeris and TLE data may need to be downloaded on first use.
+- Skyfield ephemeris and TLE files may still be downloading.
 
 ## Next reading
 - [docs/architecture.md](docs/architecture.md)

@@ -1,7 +1,8 @@
-# LUNA Backend – Developer Handoff (v2.0.0)
+# LUNA Backend Guide (v2.0.0)
 
-FastAPI service for Moon / planet / satellite visibility windows, rise/set countdowns, ground tracks, and illumination.
-Stack: Python 3.12, FastAPI, Skyfield.
+This backend powers LUNA's moon, planet, satellite, mission, and alert features.
+
+Stack: Python 3.12, FastAPI, Skyfield, SQLAlchemy.
 
 ## Run locally
 ```bash
@@ -11,7 +12,7 @@ pip install -r requirements.txt                 # first run downloads ephemeris 
 uvicorn app.main:app --reload                   # http://127.0.0.1:8000/docs
 ```
 
-_Docker files were removed; run locally or add your own containerization later._
+You can run it locally with `uvicorn` or through the repo's Docker Compose setup.
 
 ## API surface
 - `/health` – liveness
@@ -20,7 +21,7 @@ _Docker files were removed; run locally or add your own containerization later._
 - Satellite: `/satellite/position`, `/satellite/window`, `/satellite/track`
 - Mission: `/mission` CRUD plus `/mission/{id}/track` for linked satellite missions
 
-All endpoints return UTC (`*_utc`, suffixed `Z`) and server-local (`*_local`) timestamps.
+Most endpoints return both UTC (`*_utc`) and local (`*_local`) timestamps where relevant.
 
 ### Window / visibility fields (moon & planets; satellites mirror)
 - `visible_now` (bool)
@@ -37,7 +38,7 @@ All endpoints return UTC (`*_utc`, suffixed `Z`) and server-local (`*_local`) ti
 - Position: `{ azimuth, altitude, direction, direction_label, elevation_state, distance_km }`
 - Extras: `minutes_since_rise` (when visible), `days_until_next_rise`
 
-Edge cases: if no rise/set in the search window, the corresponding fields are `null` and duration is `0`.
+Edge case: if there is no rise/set event in the search window, related fields are `null` and duration is `0`.
 
 ## Data dependencies (`app/data`)
 - Moon: `de421.bsp` (~10 MB) auto-download with retry for Windows rename locks.
@@ -59,7 +60,7 @@ Edge cases: if no rise/set in the search window, the corresponding fields are `n
 ## Common tasks
 - Add a satellite: append TLE to `app/data/satellites.tle`; call with its name or NORAD ID.
 - Reset caches: remove files under `app/data`; first request re-downloads ephemerides/TLEs.
-- Change workers: run uvicorn via your own process manager with `--workers N` (no bundled compose now).
+- Change workers: run uvicorn via your own process manager with `--workers N`.
 
 ## Known considerations
 - Windows file-locks during ephemeris rename can occur; delete `app/data/de421.bsp*` and retry if stuck.
