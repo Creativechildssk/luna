@@ -4,9 +4,22 @@ import { api } from "../api";
 
 const MAX_HISTORY = 12;
 
-export default function ARQuickView({ azimuth, altitude, targetLabel, statusText, userLat, userLon, liveIdentifyEnabled = true, onClose }) {
+export default function ARQuickView({
+  azimuth,
+  altitude,
+  targetLabel,
+  statusText,
+  userLat,
+  userLon,
+  targetType,
+  targetId,
+  liveIdentifyEnabled = true,
+  onClose,
+}) {
   const [heading, setHeading] = useState(null);
   const [pitch, setPitch] = useState(null);
+  const [offsets, setOffsets] = useState({ az: 0, alt: 0 });
+  const [compassAccuracy, setCompassAccuracy] = useState(null);
   const [supportMsg, setSupportMsg] = useState("");
   const [orientationEnabled, setOrientationEnabled] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
@@ -69,8 +82,9 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
     }
 
     function handleOrient(e) {
-      const rawHeading = getHeadingFromEvent(e);
-      const rawPitch = getPitchFromEvent(e);
+      const screenAngle = getScreenOrientationAngle();
+      const rawHeading = getHeadingFromEvent(e, screenAngle);
+      const rawPitch = getPitchFromEvent(e, screenAngle);
 
       if (typeof rawHeading === "number") {
         historyRef.current = [...historyRef.current.slice(-(MAX_HISTORY - 1)), rawHeading];
@@ -78,6 +92,10 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
         headingRef.current = nextHeading;
         setHeading(nextHeading);
         setCalibration(getCalibrationState(historyRef.current));
+      }
+
+      if (typeof e.webkitCompassAccuracy === "number") {
+        setCompassAccuracy(Math.max(0, e.webkitCompassAccuracy));
       }
 
       if (typeof rawPitch === "number") {
@@ -91,8 +109,27 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
     return () => window.removeEventListener("deviceorientation", handleOrient, true);
   }, [orientationEnabled]);
 
-  const deltaAz = heading != null && azimuth != null ? normalize(azimuth - heading) : null;
-  const deltaAlt = altitude != null && pitch != null ? altitude - pitch : altitude != null ? altitude : null;
+  const targetLive = useQuery({
+    queryKey: ["arTarget", targetType, targetId, userLat, userLon],
+    queryFn: async () => {
+      if (targetType === "moon") return api.moonPosition(userLat, userLon);
+      if (targetType === "planet") return api.planetPosition(targetId, userLat, userLon);
+      if (targetType === "satellite") return api.satellitePosition(targetId, userLat, userLon);
+      return null;
+    },
+    enabled: typeof userLat === "number" && typeof userLon === "number" && ["moon", "planet", "satellite"].includes(targetType),
+    refetchInterval: targetType === "satellite" ? 2000 : 6000,
+    staleTime: 1000,
+  });
+
+  const livePos = useMemo(() => extractPosition(targetLive.data), [targetLive.data]);
+  const targetAzimuth = livePos?.azimuth ?? azimuth;
+  const targetAltitude = livePos?.altitude ?? altitude;
+
+  const rawDeltaAz = heading != null && targetAzimuth != null ? normalize(targetAzimuth - heading) : null;
+  const rawDeltaAlt = targetAltitude != null && pitch != null ? targetAltitude - pitch : targetAltitude != null ? targetAltitude : null;
+  const deltaAz = rawDeltaAz == null ? null : normalize(rawDeltaAz + offsets.az);
+  const deltaAlt = rawDeltaAlt == null ? null : rawDeltaAlt + offsets.alt;
   const dirText = useMemo(() => {
     if (deltaAz == null) return "";
     if (Math.abs(deltaAz) < 4) return "Heading aligned";
@@ -105,6 +142,7 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
   }, [deltaAlt]);
   const reticle = useMemo(() => buildReticlePosition(deltaAz, deltaAlt), [deltaAz, deltaAlt]);
   const confidenceTone = calibration.level === "good" ? "text-emerald-300" : calibration.level === "fair" ? "text-amber-200" : "text-red-200";
+  const compassTone = compassAccuracy == null ? "text-slate-300" : compassAccuracy <= 12 ? "text-emerald-300" : compassAccuracy <= 25 ? "text-amber-200" : "text-red-200";
   const targetName = targetLabel || "Target";
   const statusLine = useMemo(() => compactStatus(statusText), [statusText]);
   const liveSat = useQuery({
@@ -172,6 +210,9 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
                 <div className="text-[10px] uppercase tracking-wide text-slate-300">Heading</div>
                 <div className="text-lg font-semibold tabular-nums">{heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
                 <div className={`text-xs ${confidenceTone}`}>Compass {calibration.level}</div>
+                <div className={`text-[11px] ${compassTone}`}>
+                  {compassAccuracy == null ? "Sensor quality unknown" : `Accuracy ±${Math.round(compassAccuracy)}°`}
+                </div>
               </div>
             </div>
           )}
@@ -211,16 +252,19 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
               <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-slate-300">Horizontal</div>
                 <div className="text-base font-semibold leading-tight">{dirText || "Waiting for heading"}</div>
-                <div className="text-xs text-slate-400">Az {azimuth != null ? `${azimuth.toFixed(0)}°` : "—"}</div>
+                <div className="text-xs text-slate-400">Az {targetAzimuth != null ? `${targetAzimuth.toFixed(0)}°` : "—"}</div>
               </div>
               <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-slate-300">Vertical</div>
                 <div className="text-base font-semibold leading-tight">{altText || "Waiting for tilt"}</div>
-                <div className="text-xs text-slate-400">Alt {altitude != null ? `${altitude.toFixed(0)}°` : "—"}</div>
+                <div className="text-xs text-slate-400">Alt {targetAltitude != null ? `${targetAltitude.toFixed(0)}°` : "—"}</div>
               </div>
               <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2">
                 <div className="text-[10px] uppercase tracking-wide text-slate-300">Calibration</div>
                 <div className={`text-sm font-medium leading-tight ${confidenceTone}`}>{calibration.text}</div>
+                <div className="mt-1 text-[11px] text-slate-400">
+                  {targetLive.isFetching ? "Updating target..." : targetLive.error ? "Using last known target" : "Live target sync active"}
+                </div>
               </div>
 
               <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2 sm:col-span-3">
@@ -250,6 +294,22 @@ export default function ARQuickView({ azimuth, altitude, targetLabel, statusText
               Enable compass
             </button>
           )}
+          {orientationEnabled && rawDeltaAz != null && rawDeltaAlt != null && (
+            <button
+              className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm"
+              onClick={() => setOffsets({ az: -rawDeltaAz, alt: -rawDeltaAlt })}
+            >
+              Set center
+            </button>
+          )}
+          {orientationEnabled && (offsets.az !== 0 || offsets.alt !== 0) && (
+            <button
+              className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm"
+              onClick={() => setOffsets({ az: 0, alt: 0 })}
+            >
+              Reset cal
+            </button>
+          )}
           <button className="px-3 py-2 rounded-xl bg-slate-900/85 text-white border border-white/20 text-sm" onClick={onClose}>Close</button>
         </div>
 
@@ -273,21 +333,55 @@ function normalize(angle) {
   return a;
 }
 
-function getHeadingFromEvent(event) {
+function getHeadingFromEvent(event, screenAngle = 0) {
   if (typeof event.webkitCompassHeading === "number") {
     return normalize360(event.webkitCompassHeading);
   }
   if (typeof event.alpha === "number") {
-    return normalize360(360 - event.alpha);
+    return normalize360(360 - event.alpha + screenAngle);
   }
   return null;
 }
 
-function getPitchFromEvent(event) {
-  if (typeof event.beta !== "number") {
+function getPitchFromEvent(event, screenAngle = 0) {
+  if (typeof event.beta !== "number" && typeof event.gamma !== "number") {
     return null;
   }
-  return Math.max(-85, Math.min(85, event.beta));
+
+  const angle = normalizeRightAngle(screenAngle);
+  let pitch;
+
+  if (angle === 90) {
+    pitch = typeof event.gamma === "number" ? -event.gamma : event.beta;
+  } else if (angle === 270) {
+    pitch = typeof event.gamma === "number" ? event.gamma : event.beta;
+  } else if (angle === 180) {
+    pitch = typeof event.beta === "number" ? -event.beta : null;
+  } else {
+    pitch = event.beta;
+  }
+
+  if (typeof pitch !== "number") return null;
+  return Math.max(-85, Math.min(85, pitch));
+}
+
+function getScreenOrientationAngle() {
+  if (typeof window === "undefined") return 0;
+  if (window.screen?.orientation && typeof window.screen.orientation.angle === "number") {
+    return window.screen.orientation.angle;
+  }
+  if (typeof window.orientation === "number") {
+    return window.orientation;
+  }
+  return 0;
+}
+
+function normalizeRightAngle(angle) {
+  const normalized = normalize360(angle);
+  if (normalized >= 315 || normalized < 45) return 0;
+  if (normalized < 135) return 90;
+  if (normalized < 225) return 180;
+  return 270;
 }
 
 function normalize360(value) {
@@ -349,4 +443,24 @@ function angularDistanceDeg(az1, alt1, az2, alt2) {
   const cosDeltaAz = Math.cos(a1 - a2);
   const cosD = Math.max(-1, Math.min(1, sin1 * sin2 + cos1 * cos2 * cosDeltaAz));
   return (Math.acos(cosD) * 180) / Math.PI;
+}
+
+function extractPosition(payload) {
+  if (!payload || typeof payload !== "object") return null;
+
+  if (payload.position && typeof payload.position.azimuth === "number" && typeof payload.position.altitude === "number") {
+    return {
+      azimuth: payload.position.azimuth,
+      altitude: payload.position.altitude,
+    };
+  }
+
+  if (typeof payload.azimuth === "number" && typeof payload.altitude === "number") {
+    return {
+      azimuth: payload.azimuth,
+      altitude: payload.altitude,
+    };
+  }
+
+  return null;
 }

@@ -47,8 +47,11 @@ async function sendJson(path, method, body) {
 }
 
 export const api = {
+  moonPosition: (lat, lon) => fetchJson('/moon/position', { lat, lon }),
   moonWindow: (lat, lon) => fetchJson('/moon/window', { lat, lon }),
+  planetPosition: (body, lat, lon) => fetchJson('/planet/position', { body, lat, lon }),
   planetWindow: (body, lat, lon) => fetchJson('/planet/window', { body, lat, lon }),
+  satellitePosition: (id, lat, lon) => fetchJson('/satellite/position', { identifier: id, lat, lon }),
   satelliteWindow: (id, lat, lon, hours = 24) =>
     fetchJson('/satellite/window', { identifier: id, lat, lon, hours }),
   satelliteTrack: (id, hours = 1, step_sec = 60) =>

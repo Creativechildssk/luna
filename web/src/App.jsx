@@ -111,18 +111,21 @@ export default function App() {
     queryFn: () => api.moonWindow(lat, lon),
     enabled: lat !== null && lon !== null,
     staleTime: 30_000,
+    refetchInterval: showAR && view === 'moon' ? 5000 : false,
   });
   const planetQ = useQuery({
     queryKey: ['planet', planet, lat, lon],
     queryFn: () => api.planetWindow(planet, lat, lon),
     enabled: hasCoordinates(lat, lon) && !!planet,
     staleTime: 30_000,
+    refetchInterval: showAR && view === 'planet' ? 5000 : false,
   });
   const satQ = useQuery({
     queryKey: ['sat', sat, lat, lon],
     queryFn: () => api.satelliteWindow(sat, lat, lon, 24),
     enabled: hasCoordinates(lat, lon) && !!sat,
     staleTime: 30_000,
+    refetchInterval: showAR && view === 'satellite' ? 4000 : false,
   });
   const satTrackHours = useMemo(() => {
     const minutesUntilRise = satQ.data?.minutes_until_rise;
@@ -541,6 +544,8 @@ export default function App() {
           azimuth={summary.azimuth}
           altitude={summary.altitude}
           targetLabel={view === 'satellite' ? sat : view === 'planet' ? planet : 'Moon'}
+          targetType={view}
+          targetId={view === 'satellite' ? sat : view === 'planet' ? planet : 'moon'}
           statusText={summary.status}
           userLat={lat}
           userLon={lon}
