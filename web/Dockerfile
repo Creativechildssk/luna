@@ -1,9 +1,12 @@
 # Build stage
 FROM node:20-alpine AS builder
+USER root
+RUN mkdir -p /app
 WORKDIR /app
 ARG VITE_API_BASE=/api
 ENV VITE_API_BASE=$VITE_API_BASE
 COPY package*.json ./
+RUN mkdir -p /app/node_modules
 RUN npm install --no-audit --no-fund
 COPY . .
 RUN npm run build
