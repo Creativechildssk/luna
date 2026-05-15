@@ -201,6 +201,10 @@ export default function App() {
     [activeData]
   );
   const quality = useMemo(() => computeQuality(activeData, weather.data), [activeData, weather.data]);
+  const localVisibilityPercent = useMemo(() => {
+    if (view !== 'moon') return null;
+    return computeLocalVisibilityPercent(activeData, weather.data);
+  }, [view, activeData, weather.data]);
 
   const fmtTime = (ts) => {
     if (!ts) return '—';
@@ -404,7 +408,13 @@ export default function App() {
           )}
         </div>
 
-        <MoonPhaseVisual illumination={summary.illum} phase_hint={summary.phase || view} latitude={lat} />
+        <MoonPhaseVisual
+          illumination={summary.illum}
+          phase_hint={summary.phase || view}
+          latitude={lat}
+          locationVisibilityPercent={localVisibilityPercent}
+          visibleNow={summary.visible}
+        />
 
         <SkyCompass azimuth={summary.azimuth} altitude={summary.altitude} direction={summary.direction} />
 
@@ -592,6 +602,38 @@ function computeQuality(data, weather) {
   score = Math.max(0, Math.min(100, Math.round(score)));
   const label = score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Fair' : 'Poor';
   return { score, label, details: '' };
+}
+
+function computeLocalVisibilityPercent(data, weather) {
+  if (!data || typeof data.position?.altitude !== 'number') return null;
+
+  const altitude = data.position.altitude;
+  let score = 0;
+
+  // Refraction means objects can be seen slightly below geometric horizon.
+  if (altitude <= -1) {
+    score = 0;
+  } else if (altitude >= 30) {
+    score = 100;
+  } else {
+    score = ((altitude + 1) / 31) * 100;
+  }
+
+  if (data.is_night === false) {
+    score *= 0.85;
+  }
+
+  const cloud = extractCurrentCloudCover(weather);
+  if (typeof cloud === 'number') {
+    const cloudFactor = Math.max(0, Math.min(1, (100 - cloud) / 100));
+    score *= cloudFactor;
+  }
+
+  if (data.visible_now === false && altitude < 0.5) {
+    score = Math.min(score, 10);
+  }
+
+  return Math.max(0, Math.min(100, Math.round(score)));
 }
 
 function extractCurrentCloudCover(weather) {

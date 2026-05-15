@@ -1,11 +1,14 @@
 ﻿import { motion } from "framer-motion";
 
-export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", latitude = null }) {
+export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", latitude = null, locationVisibilityPercent = null, visibleNow = null }) {
   const percent = Math.min(Math.max(illumination, 0), 100);
   const isWaxing = phase_hint.toLowerCase().includes("waxing");
   const isSouthernHemisphere = typeof latitude === "number" && latitude < 0;
   const hemisphereLabel = isSouthernHemisphere ? "Southern hemisphere" : "Northern hemisphere";
   const shadowWidth = Math.max(0, Math.min(100, 100 - percent));
+  const localVisibility = typeof locationVisibilityPercent === "number"
+    ? Math.max(0, Math.min(100, Math.round(locationVisibilityPercent)))
+    : null;
   const shadowSide = isWaxing
     ? (isSouthernHemisphere ? "right" : "left")
     : (isSouthernHemisphere ? "left" : "right");
@@ -48,7 +51,11 @@ export default function MoonPhaseVisual({ illumination = 0, phase_hint = "", lat
         <div className="mt-2 text-3xl md:text-4xl leading-none font-bold tracking-tight text-accent">
           {percent.toFixed(0)}%
         </div>
-        <div className="mt-1 text-sm md:text-base text-slate-400">illuminated</div>
+        <div className="mt-1 text-sm md:text-base text-slate-400">illumination (moon phase)</div>
+        <div className="mt-2 text-sm md:text-base text-slate-300">
+          Local visibility: {localVisibility != null ? `${localVisibility}%` : "—"}
+          {visibleNow != null && <span className="text-slate-500"> · {visibleNow ? "Above horizon" : "Below horizon"}</span>}
+        </div>
         <div className="mt-2 text-xs md:text-sm text-slate-500">{hemisphereLabel}</div>
       </div>
     </div>
