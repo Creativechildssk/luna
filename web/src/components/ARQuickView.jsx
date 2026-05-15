@@ -1,8 +1,9 @@
 ﻿import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueries } from "@tanstack/react-query";
 import { api } from "../api";
 
 const MAX_HISTORY = 12;
+const PLANET_BODIES = ["mercury", "venus", "mars", "jupiter", "saturn"];
 
 export default function ARQuickView({
   azimuth,
@@ -152,9 +153,25 @@ export default function ARQuickView({
     refetchInterval: 6000,
     staleTime: 5000,
   });
-  const liveMatches = useMemo(() => {
-    if (!liveIdentifyEnabled) return [];
-    if (heading == null || pitch == null || !Array.isArray(liveSat.data)) return [];
+  const liveMoon = useQuery({
+    queryKey: ["arLiveMoon", userLat, userLon],
+    queryFn: () => api.moonPosition(userLat, userLon),
+    enabled: liveIdentifyEnabled && typeof userLat === "number" && typeof userLon === "number",
+    refetchInterval: 6000,
+    staleTime: 5000,
+  });
+  const livePlanets = useQueries({
+    queries: PLANET_BODIES.map((body) => ({
+      queryKey: ["arLivePlanet", body, userLat, userLon],
+      queryFn: () => api.planetPosition(body, userLat, userLon),
+      enabled: liveIdentifyEnabled && typeof userLat === "number" && typeof userLon === "number",
+      refetchInterval: 6000,
+      staleTime: 5000,
+    })),
+  });
+
+  const liveSatMatches = useMemo(() => {
+    if (!liveIdentifyEnabled || heading == null || pitch == null || !Array.isArray(liveSat.data)) return [];
 
     const aimAz = normalize360(heading);
     const aimAlt = pitch;
@@ -166,26 +183,88 @@ export default function ARQuickView({
         const satAlt = item.position.altitude;
         return {
           name: item.satellite,
+          kind: "satellite",
           state: item.visibility_state,
           visibleNow: item.visible_now,
           angularDistance: angularDistanceDeg(aimAz, aimAlt, satAz, satAlt),
+          altitude: satAlt,
         };
       })
+      .filter((item) => item.altitude > -5)
       .sort((a, b) => a.angularDistance - b.angularDistance)
       .slice(0, 3);
   }, [heading, pitch, liveSat.data, liveIdentifyEnabled]);
-  const bestLiveMatch = liveMatches[0] || null;
+
+  const liveMoonMatch = useMemo(() => {
+    if (!liveIdentifyEnabled || heading == null || pitch == null) return null;
+    if (typeof liveMoon.data?.azimuth !== "number" || typeof liveMoon.data?.altitude !== "number") return null;
+
+    const aimAz = normalize360(heading);
+    const aimAlt = pitch;
+    const moonAz = normalize360(liveMoon.data.azimuth);
+    const moonAlt = liveMoon.data.altitude;
+
+    if (moonAlt <= -5) return null;
+
+    return {
+      name: "Moon",
+      kind: "moon",
+      angularDistance: angularDistanceDeg(aimAz, aimAlt, moonAz, moonAlt),
+      altitude: moonAlt,
+    };
+  }, [heading, pitch, liveMoon.data, liveIdentifyEnabled]);
+
+  const livePlanetMatches = useMemo(() => {
+    if (!liveIdentifyEnabled || heading == null || pitch == null) return [];
+
+    const aimAz = normalize360(heading);
+    const aimAlt = pitch;
+    const matches = [];
+
+    for (let i = 0; i < PLANET_BODIES.length; i += 1) {
+      const body = PLANET_BODIES[i];
+      const payload = livePlanets[i]?.data;
+      if (typeof payload?.azimuth !== "number" || typeof payload?.altitude !== "number") continue;
+      if (payload.altitude <= -5) continue;
+
+      matches.push({
+        name: capitalize(body),
+        kind: "planet",
+        angularDistance: angularDistanceDeg(aimAz, aimAlt, normalize360(payload.azimuth), payload.altitude),
+        altitude: payload.altitude,
+      });
+    }
+
+    return matches.sort((a, b) => a.angularDistance - b.angularDistance).slice(0, 3);
+  }, [heading, pitch, livePlanets, liveIdentifyEnabled]);
+
+  const liveCandidates = useMemo(() => {
+    const all = [];
+    if (liveMoonMatch) all.push(liveMoonMatch);
+    all.push(...livePlanetMatches);
+    all.push(...liveSatMatches);
+    return all.sort((a, b) => a.angularDistance - b.angularDistance).slice(0, 4);
+  }, [liveMoonMatch, livePlanetMatches, liveSatMatches]);
+
+  const bestDetected = useMemo(() => {
+    const top = liveCandidates[0];
+    if (!top) return null;
+    return top.angularDistance <= detectionThreshold(top.kind) ? top : null;
+  }, [liveCandidates]);
+
+  const liveHasPlanetError = livePlanets.some((q) => q.error);
+  const livePlanetLoading = livePlanets.some((q) => q.isLoading);
   const liveStatusText = !liveIdentifyEnabled
     ? "Live identify is disabled in slider menu."
     : !(typeof userLat === "number" && typeof userLon === "number")
     ? "Live identify needs location access. Set location and try again."
-    : liveSat.isLoading
-    ? "Scanning nearby satellites..."
-    : liveSat.error
+    : liveSat.isLoading || liveMoon.isLoading || livePlanetLoading
+    ? "Scanning moon, planets, and satellites..."
+    : liveSat.error || liveMoon.error || liveHasPlanetError
     ? "Live identify unavailable right now."
-    : bestLiveMatch && bestLiveMatch.angularDistance <= 8
-    ? `Likely ${bestLiveMatch.name} (${bestLiveMatch.angularDistance.toFixed(1)}° from aim)`
-    : "No close satellite match. Could be aircraft, meteor, or distant object.";
+    : bestDetected
+    ? `Detected ${bestDetected.name} (${bestDetected.angularDistance.toFixed(1)}° from aim)`
+    : "No close sky object match. Could be aircraft, meteor, or distant object.";
 
   return (
     <div className="fixed inset-0 z-50 bg-black">
@@ -223,9 +302,16 @@ export default function ARQuickView({
               style={{ top: "max(12px, env(safe-area-inset-top))" }}
             >
               <div className="text-xs text-slate-200">{targetName} · {heading != null ? `${heading.toFixed(0)}°` : "—"}</div>
-              {liveIdentifyEnabled && bestLiveMatch && (
-                <div className="text-[11px] text-slate-300 mt-0.5">Nearest: {bestLiveMatch.name} · {bestLiveMatch.angularDistance.toFixed(1)}°</div>
+              {liveIdentifyEnabled && bestDetected && (
+                <div className="text-[11px] text-slate-300 mt-0.5">Detected: {bestDetected.name} · {bestDetected.angularDistance.toFixed(1)}°</div>
               )}
+            </div>
+          )}
+
+          {liveIdentifyEnabled && bestDetected && (
+            <div className="absolute left-1/2 -translate-x-1/2 top-[18%] rounded-xl bg-emerald-500/20 border border-emerald-300/45 px-3 py-1.5 text-center shadow-[0_0_20px_rgba(16,185,129,0.22)]">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-emerald-100">Detected</div>
+              <div className="text-sm font-semibold text-emerald-50">{bestDetected.name}</div>
             </div>
           )}
 
@@ -270,10 +356,10 @@ export default function ARQuickView({
               <div className="rounded-xl bg-slate-950/68 border border-white/10 px-3 py-2 sm:col-span-3">
                 <div className="text-[10px] uppercase tracking-wide text-slate-300">Live Identify</div>
                 <div className="text-sm font-medium text-slate-100 leading-tight">{liveStatusText}</div>
-                {liveIdentifyEnabled && liveMatches.length > 0 && (
+                {liveIdentifyEnabled && liveCandidates.length > 0 && (
                   <div className="mt-1 text-xs text-slate-400 flex flex-wrap gap-x-3 gap-y-1">
-                    {liveMatches.map((item) => (
-                      <span key={item.name}>{item.name}: {item.angularDistance.toFixed(1)}°</span>
+                    {liveCandidates.map((item) => (
+                      <span key={`${item.kind}-${item.name}`}>{item.name}: {item.angularDistance.toFixed(1)}°</span>
                     ))}
                   </div>
                 )}
@@ -463,4 +549,14 @@ function extractPosition(payload) {
   }
 
   return null;
+}
+
+function detectionThreshold(kind) {
+  if (kind === "satellite") return 9;
+  if (kind === "planet") return 8;
+  return 8;
+}
+
+function capitalize(text) {
+  return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
 }
