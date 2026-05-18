@@ -26,6 +26,7 @@ RUN if [ -n "$PIP_INDEX_URL" ]; then pip config set global.index-url "$PIP_INDEX
     echo "[build] Python dependencies installed successfully."
 
 COPY app /app/app
+COPY scripts /app/scripts
 
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

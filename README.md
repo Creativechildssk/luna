@@ -131,6 +131,14 @@ Services:
 - web: internal port 3000
 - nginx: external ports 80 and 443
 - db: PostgreSQL 16
+- data-updater: periodic sync of `de421.bsp`, `de440s.bsp`, and `satellites.tle`
+
+Data sync tuning (optional env vars):
+- `LUNA_SYNC_INTERVAL_SECONDS` (default `21600`, every 6h)
+- `LUNA_TLE_MAX_AGE_SECONDS` (default `21600`)
+- `LUNA_DE421_MAX_AGE_SECONDS` (default `2592000`, 30d)
+- `LUNA_DE440S_MAX_AGE_SECONDS` (default `2592000`, 30d)
+- `LUNA_TLE_URL` (default CelesTrak active satellites feed)
 
 More setup guidance: [docs/getting-started.md](docs/getting-started.md)
 
@@ -139,6 +147,11 @@ More setup guidance: [docs/getting-started.md](docs/getting-started.md)
 ### Health check
 ```bash
 curl http://127.0.0.1:8000/health/
+```
+
+### Data freshness check
+```bash
+curl http://127.0.0.1:8000/health/data
 ```
 
 ### Moon window for a location

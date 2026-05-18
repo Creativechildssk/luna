@@ -4,9 +4,9 @@ services:
   db:
     image: postgres:16
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=luna
+      - POSTGRES_USER=${POSTGRES_USER:-luna}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-change-me}
+      - POSTGRES_DB=${POSTGRES_DB:-luna}
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
@@ -21,13 +21,34 @@ services:
         PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
     container_name: luna-backend
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/luna
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-luna}:${POSTGRES_PASSWORD:-change-me}@db:5432/${POSTGRES_DB:-luna}
     depends_on:
       - db
     volumes:
       - backend-data:/app/app/data
     expose:
       - "8000"
+    restart: unless-stopped
+
+  data-updater:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-}
+        PIP_EXTRA_INDEX_URL: ${PIP_EXTRA_INDEX_URL:-}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-}
+    container_name: luna-data-updater
+    environment:
+      - LUNA_SYNC_INTERVAL_SECONDS=${LUNA_SYNC_INTERVAL_SECONDS:-21600}
+      - LUNA_TLE_MAX_AGE_SECONDS=${LUNA_TLE_MAX_AGE_SECONDS:-21600}
+      - LUNA_DE421_MAX_AGE_SECONDS=${LUNA_DE421_MAX_AGE_SECONDS:-2592000}
+      - LUNA_DE440S_MAX_AGE_SECONDS=${LUNA_DE440S_MAX_AGE_SECONDS:-2592000}
+      - LUNA_TLE_URL=${LUNA_TLE_URL:-https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle}
+      - LUNA_SYNC_FORCE_FIRST=${LUNA_SYNC_FORCE_FIRST:-true}
+    command: ["python", "/app/scripts/sync_data.py"]
+    volumes:
+      - backend-data:/app/app/data
     restart: unless-stopped
 
   web:

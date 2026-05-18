@@ -11,6 +11,7 @@ node_modules/
 .next/
 web/.next/
 web/dist/
+web/vite.config.js.timestamp-*.mjs
 
 # Flutter/Dart
 .dart_tool/
@@ -32,7 +33,12 @@ privkey/
 # App data caches
 backend/app/data/*.bsp*
 backend/app/data/*.download*
+backend/app/data/*.tmp
+backend/app/data/sync_state.json
 backend/de421*.*
+backend/*.db
+.tmp-reqtest/
+*.log
 
 # Flutter generated icon/splash
 **/Generated.xcconfig

@@ -6,6 +6,7 @@ from app.api import alerts, health, mission, moon, planet, satellite
 from app.api import satellite_visible
 from app.core.config import settings
 from app.services.alert_worker import run_alert_worker
+from app.services.data_sync import sync_data
 
 app = FastAPI(title=settings.APP_NAME, version=settings.VERSION)
 
@@ -30,7 +31,21 @@ app.include_router(satellite_visible.router, prefix="/satellite", tags=["Satelli
 
 @app.on_event("startup")
 async def startup_event():
+    # Ensure required astronomy files exist before serving.
+    sync_data(force=False)
     app.state.alert_worker_task = asyncio.create_task(run_alert_worker())
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    task = getattr(app.state, "alert_worker_task", None)
+    if task is None:
+        return
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
 
 @app.get("/")
 def root():

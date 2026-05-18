@@ -97,4 +97,8 @@ async def run_alert_worker(interval_seconds: int = 60):
                     db.close()
             except Exception:
                 logger.exception("Failed to close alert worker database session")
-        await asyncio.sleep(interval_seconds)
+        try:
+            await asyncio.sleep(interval_seconds)
+        except asyncio.CancelledError:
+            logger.info("Alert worker cancelled")
+            raise
